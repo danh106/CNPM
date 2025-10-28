@@ -1,0 +1,34 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h3>➕ Thêm Công Tác Viên</h3>
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Họ tên</label>
+      <input type="text" name="ten" class="form-control" required>
+    </div>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label>Số điện thoại</label>
+      <input type="text" name="sdt" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label>Địa chỉ</label>
+      <input type="text" name="dia_chi" class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label>Ảnh đại diện</label>
+      <input type="file" name="avatar" accept="image/*" class="form-control-file">
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Thêm mới</button>
+  </form>
+</div>
+{% endblock %}

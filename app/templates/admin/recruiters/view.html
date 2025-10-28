@@ -1,0 +1,55 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mb-4">Thông tin chi tiết Cộng tác viên</h3>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    {% if recruiter.avatar_url %}
+                        <img src="{{ recruiter.avatar_url }}" alt="Avatar" class="img-thumbnail rounded-circle mb-3" width="150" height="150">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='img/default-avatar.png') }}" alt="Avatar" class="img-thumbnail rounded-circle mb-3" width="150" height="150">
+                    {% endif %}
+                    <h5 class="text-primary">{{ recruiter.full_name }}</h5>
+                    <span class="badge bg-info text-white">Cộng tác viên</span>
+                </div>
+
+                <div class="col-md-9">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="200">Họ và tên:</th>
+                            <td>{{ recruiter.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ recruiter.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ngày tạo tài khoản:</th>
+                            <td>{{ recruiter.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Cập nhật lần cuối:</th>
+                            <td>{{ recruiter.updated_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                    </table>
+                    <div class="mt-4">
+                        <a href="{{ url_for('admin.recruiter_edit', id=recruiter.id) }}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
+                        <a href="{{ url_for('admin.recruiter_delete', id=recruiter.id) }}" class="btn btn-danger"
+                            onclick="return confirm('Bạn có chắc muốn xóa không?');">
+                            <i class="fas fa-trash"></i> Xóa
+                        </a>
+                        <a href="{{ url_for('admin.recruiter_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

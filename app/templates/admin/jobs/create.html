@@ -1,0 +1,40 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<h1>Thêm tin tuyển dụng</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label>Tiêu đề</label>
+        <input type="text" name="title" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Mô tả công việc</label>
+        <textarea name="description" class="form-control" rows="4" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label>Yêu cầu ứng viên</label>
+        <textarea name="requirements" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="mb-3">
+        <label>Mức lương</label>
+        <input type="text" name="salary_range" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label>Địa điểm</label>
+        <input type="text" name="location" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label>Hạn nộp hồ sơ</label>
+        <input type="date" name="deadline" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label>Người đăng</label>
+        <select name="created_by" class="form-control">
+            {% for user in users %}
+                <option value="{{ user.id }}">{{ user.full_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a href="{{ url_for('admin.job_list') }}" class="btn btn-secondary">Hủy</a>
+</form>
+{% endblock %}

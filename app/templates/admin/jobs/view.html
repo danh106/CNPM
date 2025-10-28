@@ -1,0 +1,36 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<h1>Chi tiết tin tuyển dụng</h1>
+<table class="table table-bordered">
+    <tr>
+        <th>Tiêu đề</th>
+        <td>{{ job.title }}</td>
+    </tr>
+    <tr>
+        <th>Mô tả công việc</th>
+        <td>{{ job.description }}</td>
+    </tr>
+    <tr>
+        <th>Yêu cầu ứng viên</th>
+        <td>{{ job.requirements }}</td>
+    </tr>
+    <tr>
+        <th>Mức lương</th>
+        <td>{{ job.salary_range }}</td>
+    </tr>
+    <tr>
+        <th>Địa điểm</th>
+        <td>{{ job.location }}</td>
+    </tr>
+    <tr>
+        <th>Hạn nộp</th>
+        <td>{{ job.deadline }}</td>
+    </tr>
+    <tr>
+        <th>Người đăng</th>
+        <td>{{ job.created_by }}</td>
+    </tr>
+</table>
+<a href="{{ url_for('admin.job_edit', id=job.id) }}" class="btn btn-warning">Sửa</a>
+<a href="{{ url_for('admin.job_list') }}" class="btn btn-secondary">Quay lại</a>
+{% endblock %}

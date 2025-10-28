@@ -1,0 +1,49 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<h1 class="h3 mb-4 text-gray-800">Tổng quan hệ thống</h1>
+
+<div class="row">
+    <!-- Tài khoản -->
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('admin.user_list') }}" style="text-decoration: none;">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Tài khoản
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ tai_khoan|length }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Cộng tác viên -->
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('admin.recruiter_list') }}" style="text-decoration: none;">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                        Cộng tác viên
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ ctv|length }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tin tuyển dụng -->
+    <div class="col-md-4 mb-4">
+        <a href="{{ url_for('admin.job_list') }}" style="text-decoration: none;">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                        Tin tuyển dụng
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ tin_tuyen_dung|length }}</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

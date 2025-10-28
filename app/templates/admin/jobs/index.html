@@ -1,0 +1,52 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<h1>Danh sách tin tuyển dụng</h1>
+<a href="{{ url_for('admin.job_add') }}" class="btn btn-primary mb-3">Thêm mới</a>
+
+<table class="table table-striped table-hover mt-3">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Tiêu đề</th>
+            <th>Người đăng</th>
+            <th>Hạn nộp</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for job in jobs %}
+        <tr>
+            <td>{{ job.id }}</td>
+            <td><strong>{{ job.title }}</strong></td>
+            <td>
+                {{ job.creator.full_name if job.creator else 'Admin' }}
+            </td>
+            <td>
+                {# Định dạng ngày tháng năm #}
+                {% if job.deadline %}
+                    {{ job.deadline.strftime('%d/%m/%Y') }}
+                {% else %}
+                    Không giới hạn
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('admin.job_view', id=job.id) }}" class="btn btn-info btn-sm">Xem</a>
+                <a href="{{ url_for('admin.job_edit', id=job.id) }}" class="btn btn-warning btn-sm">Sửa</a>
+                
+                {# Form POST cho hành động xóa #}
+                <form action="{{ url_for('admin.job_delete', id=job.id) }}" method="POST" style="display:inline-block;">
+                    <button type="submit" class="btn btn-danger btn-sm" 
+                            onclick="return confirm('Bạn có chắc muốn xóa tin tuyển dụng: {{ job.title }} không?')">
+                        Xóa
+                    </button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="5" class="text-center">Chưa có tin tuyển dụng nào được đăng.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

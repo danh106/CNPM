@@ -1,0 +1,32 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<h1>Sửa tin tuyển dụng</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label>Tiêu đề</label>
+        <input type="text" name="title" class="form-control" value="{{ job.title }}" required>
+    </div>
+    <div class="mb-3">
+        <label>Mô tả công việc</label>
+        <textarea name="description" class="form-control" rows="4" required>{{ job.description }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label>Yêu cầu ứng viên</label>
+        <textarea name="requirements" class="form-control" rows="3">{{ job.requirements }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label>Mức lương</label>
+        <input type="text" name="salary_range" class="form-control" value="{{ job.salary_range }}">
+    </div>
+    <div class="mb-3">
+        <label>Địa điểm</label>
+        <input type="text" name="location" class="form-control" value="{{ job.location }}">
+    </div>
+    <div class="mb-3">
+        <label>Hạn nộp hồ sơ</label>
+        <input type="date" name="deadline" class="form-control" value="{{ job.deadline }}">
+    </div>
+    <button type="submit" class="btn btn-success">Cập nhật</button>
+    <a href="{{ url_for('admin.job_list') }}" class="btn btn-secondary">Hủy</a>
+</form>
+{% endblock %}

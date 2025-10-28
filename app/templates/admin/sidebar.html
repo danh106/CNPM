@@ -1,0 +1,54 @@
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Logo -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('admin.admin_dashboard') }}">
+        <div class="sidebar-brand-icon rotate-n-15">
+            <i class="fas fa-briefcase"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">Admin</div>
+    </a>
+
+    <hr class="sidebar-divider my-0">
+
+    <!-- Menu -->
+    <li class="nav-item {% if request.path == url_for('admin.admin_dashboard') %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Bảng điều khiển</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-heading">
+        Quản lý
+    </div>
+
+    <li class="nav-item {% if '/users' in request.path %}active{% endif %}">
+        <a class="nav-link" href="{{ url_for('admin.user_list') }}">
+            <i class="fas fa-users"></i>
+            <span>Tài khoản</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin.recruiter_list') }}">
+            <i class="fas fa-user-tie"></i>
+            <span>Cộng tác viên</span>
+        </a>
+    </li>
+
+
+    <li class="nav-item">
+        <a class="nav-link" href="#">
+            <i class="fas fa-newspaper"></i>
+            <span>Tin tuyển dụng</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+</ul>

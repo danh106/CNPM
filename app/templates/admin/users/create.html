@@ -1,0 +1,30 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h3>Thêm tài khoản mới</h3>
+    <form method="POST">
+        <div class="mb-3">
+            <label>Họ và tên</label>
+            <input name="full_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Email</label>
+            <input name="email" type="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Mật khẩu</label>
+            <input name="password" type="password" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Vai trò</label>
+            <select name="role" class="form-control">
+                <option value="applicant">Applicant</option>
+                <option value="recruiter">Recruiter</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success">Thêm</button>
+        <a href="{{ url_for('admin.user_list') }}" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+{% endblock %}

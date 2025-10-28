@@ -1,0 +1,64 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mb-4">Chỉnh sửa tài khoản</h3>
+    <form method="POST">
+        <div class="mb-3">
+            <label>Tên người dùng</label>
+            <input name="full_name" class="form-control" value="{{ user.full_name }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input name="email" type="email" class="form-control" value="{{ user.email }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Vai trò</label>
+            <select name="role" class="form-control">
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                <option value="recruiter" {% if user.role == 'recruiter' %}selected{% endif %}>Cộng tác viên</option>
+                <option value="applicant" {% if user.role == 'applicant' %}selected{% endif %}>Ứng viên</option>
+            </select>
+        </div>
+
+        <!-- Mật khẩu có thể ẩn/hiện -->
+        <div class="mb-3">
+            <label>Mật khẩu (để trống nếu không đổi)</label>
+            <div class="input-group">
+                <input id="passwordField" name="password" type="password" class="form-control" placeholder="••••••••">
+                <button type="button" class="btn btn-outline-secondary" id="togglePassword" tabindex="-1">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Lưu</button>
+        <a href="{{ url_for('admin.user_list') }}" class="btn btn-secondary">Quay lại</a>
+    </form>
+</div>
+
+<!-- Thêm Font Awesome nếu layout chưa có -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("togglePassword");
+    const passwordField = document.getElementById("passwordField");
+    const icon = toggleBtn.querySelector("i");
+
+    toggleBtn.addEventListener("click", function (event) {
+        event.preventDefault(); // chặn submit form khi bấm nút
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            passwordField.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    });
+});
+</script>
+{% endblock %}

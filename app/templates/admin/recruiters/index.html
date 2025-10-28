@@ -1,0 +1,48 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h3 class="mb-3">Danh sách Cộng tác viên</h3>
+    <a href="{{ url_for('admin.recruiter_add') }}" class="btn btn-primary mb-3">+ Thêm Cộng tác viên</a>
+
+    <table class="table table-bordered table-hover">
+    <thead class="thead-light">
+        <tr>
+            <th>#</th>
+            <th>Ảnh đại diện</th>
+            <th>Họ và tên</th>
+            <th>Email</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in recruiters %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+                {% if r.avatar_url %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/' ~ r.avatar_url) }}" width="60" class="rounded">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/default-avatar.png') }}" width="60" class="rounded">
+                {% endif %}
+            </td>
+            <td>{{ r.full_name }}</td>
+            <td>{{ r.email }}</td>
+            <td>{{ r.created_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+                <a href="{{ url_for('admin.recruiter_view', id=r.id) }}" class="btn btn-sm btn-info">Xem</a>
+                <a href="{{ url_for('admin.recruiter_edit', id=r.id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                <a href="{{ url_for('admin.recruiter_delete', id=r.id) }}" class="btn btn-sm btn-danger"
+                    onclick="return confirm('Bạn có chắc muốn xóa không?');">Xóa</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6" class="text-center text-muted">Chưa có cộng tác viên nào</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>
+{% endblock %}
