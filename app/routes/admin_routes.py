@@ -53,8 +53,6 @@ def user_add():
 
     return render_template('admin/users/create.html')
 
-
-# ✏️ Sửa tài khoản
 @admin_bp.route('/users/edit/<int:id>', methods=['GET', 'POST'])
 def user_edit(id):
     user = User.query.get_or_404(id)
@@ -75,7 +73,6 @@ def user_edit(id):
     return render_template('admin/users/edit.html', user=user)
 
 
-# ❌ Xóa tài khoản (POST)
 @admin_bp.route('/users/delete/<int:id>', methods=['POST'])
 def user_delete(id):
     user = User.query.get_or_404(id)
@@ -90,10 +87,6 @@ def recruiter_list():
     recruiters = User.query.filter_by(role='recruiter').all()
     return render_template('admin/recruiters/index.html', recruiters=recruiters)
 
-
-# ----------------------------
-# THÊM CỘNG TÁC VIÊN
-# ----------------------------
 @admin_bp.route('/recruiters/create', methods=['GET', 'POST'])
 def recruiter_add():
     if request.method == 'POST':
@@ -133,10 +126,6 @@ def recruiter_add():
 
     return render_template('admin/recruiters/create.html')
 
-
-# ----------------------------
-# SỬA CỘNG TÁC VIÊN
-# ----------------------------
 @admin_bp.route('/recruiters/edit/<int:id>', methods=['GET', 'POST'])
 def recruiter_edit(id):
     recruiter = User.query.get_or_404(id)
@@ -166,10 +155,6 @@ def recruiter_edit(id):
 
     return render_template('admin/recruiters/edit.html', recruiter=recruiter)
 
-
-# ----------------------------
-# XÓA CỘNG TÁC VIÊN
-# ----------------------------
 @admin_bp.route('/recruiters/delete/<int:id>', methods=['POST'])
 def recruiter_delete(id):
     recruiter = User.query.get_or_404(id)
@@ -182,10 +167,6 @@ def recruiter_delete(id):
     flash('Đã xóa cộng tác viên!', 'danger')
     return redirect(url_for('admin.recruiter_list'))
 
-
-# ----------------------------
-# XEM THÔNG TIN CỘNG TÁC VIÊN
-# ----------------------------
 @admin_bp.route('/recruiters/view/<int:id>')
 def recruiter_view(id):
     recruiter = User.query.get_or_404(id)
@@ -201,9 +182,6 @@ def job_list():
     return render_template('admin/jobs/index.html', jobs=jobs)
 
 
-# ----------------------------
-# TẠO BÀI TUYỂN DỤNG MỚI
-# ----------------------------
 @admin_bp.route('/jobs/create', methods=['GET', 'POST'])
 def job_add():
     if request.method == 'POST':
@@ -236,10 +214,6 @@ def job_add():
     users = User.query.all()
     return render_template('admin/jobs/create.html', users=users)
 
-
-# ----------------------------
-# SỬA BÀI TUYỂN DỤNG
-# ----------------------------
 @admin_bp.route('/jobs/edit/<int:id>', methods=['GET', 'POST'])
 def job_edit(id):
     job = Job.query.get_or_404(id)
@@ -258,9 +232,6 @@ def job_edit(id):
     return render_template('admin/jobs/edit.html', job=job)
 
 
-# ----------------------------
-# XÓA BÀI TUYỂN DỤNG
-# ----------------------------
 @admin_bp.route('/jobs/delete/<int:id>', methods=['POST'])
 def job_delete(id):
     job = Job.query.get_or_404(id)
@@ -269,11 +240,15 @@ def job_delete(id):
     flash('Đã xóa tin tuyển dụng!', 'danger')
     return redirect(url_for('admin.job_list'))
 
-
-# ----------------------------
-# XEM CHI TIẾT TIN TUYỂN DỤNG
-# ----------------------------
 @admin_bp.route('/jobs/view/<int:id>')
 def job_view(id):
     job = Job.query.get_or_404(id)
     return render_template('admin/jobs/view.html', job=job)
+
+# Đăng nhập
+def check_credentials(username, password):
+    admin_username = os.getenv('ADMIN_USERNAME', '?')
+    admin_password = os.getenv('ADMIN_PASSWORD', '?')
+    if username == admin_username and password == admin_password:
+        return True
+    return False

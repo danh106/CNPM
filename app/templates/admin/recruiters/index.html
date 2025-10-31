@@ -1,8 +1,8 @@
 {% extends "admin/layout.html" %}
 {% block content %}
 <div class="container-fluid">
-    <h3 class="mb-3">Danh sách Cộng tác viên</h3>
-    <a href="{{ url_for('admin.recruiter_add') }}" class="btn btn-primary mb-3">+ Thêm Cộng tác viên</a>
+    <h3 class="mb-3">Danh sách Công tác viên</h3>
+    <a href="{{ url_for('admin.recruiter_add') }}" class="btn btn-primary mb-3">+ Thêm Công tác viên</a>
 
     <table class="table table-bordered table-hover">
     <thead class="thead-light">
@@ -25,6 +25,7 @@
                 {% else %}
                     <img src="{{ url_for('static', filename='images/default-avatar.png') }}" width="60" class="rounded">
                 {% endif %}
+                
             </td>
             <td>{{ r.full_name }}</td>
             <td>{{ r.email }}</td>
