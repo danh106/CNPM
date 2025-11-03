@@ -51,5 +51,11 @@ def create_app():
 
     from app.routes.admin_routes import admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    @app.context_processor
+    def inject_request():
+        from flask import request
+        return dict(request=request)
+
 
     return app
