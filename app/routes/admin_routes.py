@@ -7,6 +7,8 @@ import os
 from werkzeug.utils import secure_filename
 from flask import current_app
 from datetime import datetime
+from functools import wraps
+
 
 # --- KHAI BÁO CẦN THIẾT ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -15,8 +17,6 @@ admin_bp = Blueprint('admin', __name__, template_folder='../templates/admin')
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- HÀM KIỂM TRA QUYỀN ADMIN (CUSTOM DECORATOR) ---
-# Tùy thuộc vào model User của bạn, giả sử User có trường 'role' (admin, recruiter, user)
 def admin_required(func):
     """Decorator để kiểm tra xem người dùng hiện tại có phải là Admin không."""
     @login_required
@@ -29,7 +29,6 @@ def admin_required(func):
         return func(*args, **kwargs)
     wrapper.__name__ = func.__name__ # Giữ tên hàm gốc
     return wrapper
-
 # --- ROUTES QUẢN TRỊ ---
 
 # 🏠 Trang admin chính

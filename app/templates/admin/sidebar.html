@@ -10,8 +10,8 @@
 
     <hr class="sidebar-divider my-0">
 
-    <!-- Menu -->
-    <li class="nav-item {% if request.path == url_for('admin.admin_dashboard') %}active{% endif %}">
+    <!-- Dashboard -->
+    <li class="nav-item {% if request.path.rstrip('/') == url_for('admin.admin_dashboard').rstrip('/') %}active{% endif %}">
         <a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">
             <i class="fas fa-fw fa-tachometer-alt"></i>
             <span>Bảng điều khiển</span>
@@ -24,26 +24,52 @@
         Quản lý
     </div>
 
-    <li class="nav-item {% if '/users' in request.path %}active{% endif %}">
-        <a class="nav-link" href="{{ url_for('admin.user_list') }}">
+    <!-- Users Menu -->
+    {% set user_active = request.path.startswith(url_for('admin.user_list')[:-1]) or request.path.startswith(url_for('admin.user_add')[:-1]) %}
+    <li class="nav-item {% if user_active %}active{% endif %}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsers"
+           aria-expanded="{{ 'true' if user_active else 'false' }}" aria-controls="collapseUsers">
             <i class="fas fa-users"></i>
             <span>Tài khoản</span>
         </a>
+        <div id="collapseUsers" class="collapse {% if user_active %}show{% endif %}" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item {% if request.path == url_for('admin.user_list') %}active{% endif %}" href="{{ url_for('admin.user_list') }}">Danh sách</a>
+                <a class="collapse-item {% if request.path == url_for('admin.user_add') %}active{% endif %}" href="{{ url_for('admin.user_add') }}">Thêm mới</a>
+            </div>
+        </div>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.recruiter_list') }}">
+    <!-- Recruiters Menu -->
+    {% set recruiter_active = request.path.startswith(url_for('admin.recruiter_list')[:-1]) or request.path.startswith(url_for('admin.recruiter_add')[:-1]) %}
+    <li class="nav-item {% if recruiter_active %}active{% endif %}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRecruiters"
+           aria-expanded="{{ 'true' if recruiter_active else 'false' }}" aria-controls="collapseRecruiters">
             <i class="fas fa-user-tie"></i>
             <span>Cộng tác viên</span>
         </a>
+        <div id="collapseRecruiters" class="collapse {% if recruiter_active %}show{% endif %}" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item {% if request.path == url_for('admin.recruiter_list') %}active{% endif %}" href="{{ url_for('admin.recruiter_list') }}">Danh sách</a>
+                <a class="collapse-item {% if request.path == url_for('admin.recruiter_add') %}active{% endif %}" href="{{ url_for('admin.recruiter_add') }}">Thêm mới</a>
+            </div>
+        </div>
     </li>
 
-
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.job_list') }}">
+    <!-- Jobs Menu -->
+    {% set job_active = request.path.startswith(url_for('admin.job_list')[:-1]) or request.path.startswith(url_for('admin.job_add')[:-1]) %}
+    <li class="nav-item {% if job_active %}active{% endif %}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseJobs"
+           aria-expanded="{{ 'true' if job_active else 'false' }}" aria-controls="collapseJobs">
             <i class="fas fa-newspaper"></i>
             <span>Tin tuyển dụng</span>
         </a>
+        <div id="collapseJobs" class="collapse {% if job_active %}show{% endif %}" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item {% if request.path == url_for('admin.job_list') %}active{% endif %}" href="{{ url_for('admin.job_list') }}">Danh sách</a>
+                <a class="collapse-item {% if request.path == url_for('admin.job_add') %}active{% endif %}" href="{{ url_for('admin.job_add') }}">Thêm mới</a>
+            </div>
+        </div>
     </li>
 
     <hr class="sidebar-divider d-none d-md-block">
