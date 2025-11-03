@@ -21,6 +21,53 @@
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
                     <h5 class="ml-3 mt-2 font-weight-bold text-primary">Bảng điều khiển</h5>
+
+                    <ul class="navbar-nav ml-auto">
+
+                        {% if current_user.is_authenticated %}
+                        
+                            <div class="topbar-divider d-none d-sm-block"></div>
+
+                            <li class="nav-item dropdown no-arrow">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    
+                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                        {{ current_user.username }}
+                                    </span>
+                                    
+                                    {% if current_user.avatar_url %}
+                                        <img class="img-profile rounded-circle"
+                                            src="{{ current_user.avatar_url }}">
+                                    {% else %}
+                                        <img class="img-profile rounded-circle"
+                                            src="{{ url_for('static', filename='images/default-avatar.png') }}">
+                                    {% endif %}
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                    aria-labelledby="userDropdown">
+                                    <a class="dropdown-item" href="#">
+                                        <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Hồ sơ
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="{{ url_for('logout') }}" data-toggle="modal" data-target="#logoutModal">
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Đăng xuất
+                                    </a>
+                                </div>
+                            </li>
+
+                        {% else %}
+                            
+                            <li class="nav-item mx-1">
+                                <a class="nav-link" href="{{ url_for('login') }}">
+                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold">Đăng nhập</span>
+                                    <i class="fas fa-sign-in-alt fa-lg"></i>
+                                </a>
+                            </li>
+
+                        {% endif %}
+
+                    </ul>
                 </nav>
                 <!-- End of Topbar -->
 
