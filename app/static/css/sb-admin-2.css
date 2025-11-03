@@ -66,8 +66,10 @@ body {
   line-height: 1.5;
   color: #858796;
   text-align: left;
-  background-color: #fff;
+  background: url('../img/tuyendung.webp') no-repeat center center fixed;
+  background-size: cover;
 }
+
 
 [tabindex="-1"]:focus:not(:focus-visible) {
   outline: 0 !important;
@@ -10865,6 +10867,8 @@ a:focus {
   background-position: center;
   background-size: cover;
 }
+
+
 
 .bg-register-image {
   background: url("https://source.unsplash.com/Mv9hjnEUHR4/600x800");
