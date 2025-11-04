@@ -1,12 +1,21 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+<<<<<<< HEAD
+from app.models import User
+=======
+>>>>>>> c99447b8bc428eb56c679bb2bee007b7eefb021c
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from app import db
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+<<<<<<< HEAD
+from app.models import Job
+from app.models import Applicant
+=======
 from datetime import datetime
 import os
 from app.models import User
+>>>>>>> c99447b8bc428eb56c679bb2bee007b7eefb021c
 
 main_bp = Blueprint('main', __name__)
 serializer = URLSafeTimedSerializer('super-secret-key')
@@ -36,9 +45,18 @@ class UserImages(db.Model):
 
 # ------------------ Routes ------------------ #
 
+
 @main_bp.route('/')
 def index():
-    return render_template('index.html')
+    jobs = Job.query.order_by(Job.created_at.desc()).all()
+
+    user_data = {
+        "is_logged_in": current_user.is_authenticated,
+        "username": current_user.full_name if current_user.is_authenticated else "Log in"
+    }
+
+    return render_template('index.html', user=user_data, jobs=jobs)
+
 
 @main_bp.route('/admin/index')
 @login_required
@@ -141,10 +159,37 @@ def applicant_profile(user_id):
         flash('Cập nhật hồ sơ thành công!', 'success')
         return redirect(url_for('main.applicant_profile', user_id=user_id))
 
-    return render_template(
-        'applicant_profile.html',
-        applicant=applicant,
-        user_images=user_images,
-        avatar_url=avatar_url,
-        applicant_name=applicant.user.full_name
-    )
+        flash('Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.', 'success')
+        return redirect(url_for('main.login'))
+
+    return render_template('reset_password.html', token=token)
+    applicant = Applicant.query.filter_by(user_id=user_id).first_or_404()
+    if current_user.role != 'admin' and current_user.id != user_id:
+        flash("Bạn không có quyền xem hồ sơ này.", "danger")
+        return redirect(url_for('main.index'))
+
+@main_bp.route('/job/<int:job_id>')
+def job_details(job_id):
+    job = Job.query.get_or_404(job_id)
+    return render_template('job_details.html', job=job)
+    
+@main_bp.route('/job/<int:job_id>/apply', methods=['POST'])
+def apply_job(job_id):
+    job = Job.query.get_or_404(job_id)
+    
+    name = request.form['name']
+    email = request.form['email']
+    portfolio = request.form.get('portfolio')
+    coverletter = request.form.get('coverletter')
+    cv_file = request.files.get('cv')
+    
+    # Xử lý lưu file CV và tạo record Apply (nếu bạn có model Apply)
+    # Ví dụ:
+    # application = JobApplication(job_id=job.id, name=name, email=email, ...)
+    # db.session.add(application)
+    # db.session.commit()
+    
+    flash('Apply successfully!', 'success')
+    return redirect(url_for('job_detail', job_id=job.id))
+
+    
