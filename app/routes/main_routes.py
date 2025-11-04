@@ -40,6 +40,15 @@ class UserImages(db.Model):
 def index():
     return render_template('index.html')
 
+@main_bp.route('/admin/index')
+@login_required
+def admin_index():
+    if current_user.role != 'admin':
+        flash('Bạn không có quyền truy cập!', 'danger')
+        return redirect(url_for('main.index'))
+    return render_template('admin/index.html')
+
+
 
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -54,11 +63,12 @@ def login():
             session['user_role'] = user.role
             session['user_name'] = user.full_name
             if user.role == 'admin':
-                return redirect(url_for('admin.dashboard'))
+                return redirect(url_for('main.admin_index'))  # sửa đây
             return redirect(url_for('main.applicant_profile', user_id=user.id))
         else:
             flash('Email hoặc mật khẩu không đúng!', 'danger')
     return render_template('login.html')
+
 
 
 @main_bp.route('/register', methods=['GET', 'POST'])
