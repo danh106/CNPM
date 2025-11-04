@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from app.models import Job
+from app.models import Applicant
 
 
 serializer = URLSafeTimedSerializer('super-secret-key')
@@ -12,9 +14,18 @@ serializer = URLSafeTimedSerializer('super-secret-key')
 # Blueprint chính
 main_bp = Blueprint('main', __name__)
 
+
 @main_bp.route('/')
 def index():
-    return render_template('index.html')
+    jobs = Job.query.order_by(Job.created_at.desc()).all()
+
+    user_data = {
+        "is_logged_in": current_user.is_authenticated,
+        "username": current_user.full_name if current_user.is_authenticated else "Log in"
+    }
+
+    return render_template('index.html', user=user_data, jobs=jobs)
+
 
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -121,3 +132,28 @@ def reset_password(token):
         return redirect(url_for('main.login'))
 
     return render_template('reset_password.html', token=token)
+
+@main_bp.route('/job/<int:job_id>')
+def job_details(job_id):
+    job = Job.query.get_or_404(job_id)
+    return render_template('job_details.html', job=job)
+    
+@main_bp.route('/job/<int:job_id>/apply', methods=['POST'])
+def apply_job(job_id):
+    job = Job.query.get_or_404(job_id)
+    
+    name = request.form['name']
+    email = request.form['email']
+    portfolio = request.form.get('portfolio')
+    coverletter = request.form.get('coverletter')
+    cv_file = request.files.get('cv')
+    
+    # Xử lý lưu file CV và tạo record Apply (nếu bạn có model Apply)
+    # Ví dụ:
+    # application = JobApplication(job_id=job.id, name=name, email=email, ...)
+    # db.session.add(application)
+    # db.session.commit()
+    
+    flash('Apply successfully!', 'success')
+    return redirect(url_for('job_detail', job_id=job.id))
+
