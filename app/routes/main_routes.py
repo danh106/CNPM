@@ -28,6 +28,14 @@ def index():
 
     return render_template('index.html', user=user_data, jobs=jobs)
 
+@main_bp.route('/admin/index')
+@login_required
+def admin_index():
+    if current_user.role != 'admin':
+        flash('Bạn không có quyền truy cập!', 'danger')
+        return redirect(url_for('main.index'))
+    return render_template('admin/index.html')
+
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -41,12 +49,12 @@ def login():
             session['user_role'] = user.role
             session['user_name'] = user.full_name
             if user.role == 'admin':
-                return redirect(url_for('admin.admin_dashboard'))
-
+                return redirect(url_for('main.admin_index'))
             return redirect(url_for('main.applicant_profile', user_id=user.id))
         else:
             flash('Email hoặc mật khẩu không đúng!', 'danger')
     return render_template('login.html')
+
 
 
 @main_bp.route('/register', methods=['GET', 'POST'])
