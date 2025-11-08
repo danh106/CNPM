@@ -4,11 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-<<<<<<< HEAD
     <title>Trang tuyển dụng</title>
-=======
-    <title>Job Board</title>
->>>>>>> c99447b8bc428eb56c679bb2bee007b7eefb021c
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -76,7 +72,9 @@
                                         <i class="fa-solid fa-user-tie"></i>
                                         <i class="fa-solid fa-grip-lines-vertical"></i>
                                         {% if user.is_logged_in %}
-                                            <a href="href="{{ url_for('main.applicant_profile', user_id=session.get('user_id')) }}"">{{ user.username }}</a>
+                                            <a href="{{ url_for('main.applicant_profile', user_id=current_user.id) }}">
+                                                {{ current_user.full_name }}
+                                            </a>
                                             <i class="fa-solid fa-grip-lines-vertical"></i>
                                             <a href="{{ url_for('main.logout') }}">Đăng xuất</a>
                                         {% else %}

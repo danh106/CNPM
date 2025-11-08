@@ -1,266 +1,216 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Hồ sơ ứng viên - {{ applicant.user.full_name }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        * { box-sizing: border-box; margin:0; padding:0; }
-        body { font-family:'Poppins', sans-serif; background:#f0f2f5; color:#333; }
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Hồ sơ ứng viên | OF GROUP 7</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        /* Header */
-        header {
-            position: sticky;
-            top:0;
-            background: linear-gradient(90deg,#4b7bec,#3867d6);
-            padding:15px 30px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            color:#fff;
-            z-index:100;
-            box-shadow:0 4px 12px rgba(0,0,0,0.15);
-        }
-        header .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:22px; }
-        header a { color:#fff; text-decoration:none; font-weight:500; margin-left:15px; transition:0.3s; }
-        header a:hover { text-decoration:underline; }
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='index/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='index/css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='index/fonts/icomoon/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='index/fonts/flaticon/font/flaticon.css') }}">
+  <style>
+    body {
+      background-color: #f5f6fa;
+    }
 
-        /* Container */
-        .container { max-width: 1200px; margin:30px auto; padding:0 20px; display:flex; gap:30px; flex-wrap:wrap; }
+    .card {
+      border-radius: 10px;
+    }
 
-        /* Left Info Card */
-        .info-card {
-            flex:1 1 40%;
-            background: linear-gradient(135deg,#e0eaff,#f7f9ff);
-            border-radius:20px;
-            box-shadow:0 15px 30px rgba(0,0,0,0.1);
-            padding:30px;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .info-card:hover { transform: translateY(-5px); box-shadow:0 25px 40px rgba(0,0,0,0.15); }
-        .info-card img {
-            width:180px; height:180px;
-            border-radius:50%;
-            object-fit:cover;
-            border:5px solid #3867d6;
-            margin-bottom:20px;
-            transition: transform 0.3s;
-        }
-        .info-card img:hover { transform: scale(1.05); }
-        .info-card h2 { font-size:28px; font-weight:700; margin-bottom:10px; text-align:center; }
-        .info-card p { font-size:16px; margin:6px 0; display:flex; align-items:center; gap:10px; color:#555; }
-        .status-badge {
-            display:inline-block;
-            padding:6px 15px;
-            border-radius:15px;
-            font-weight:600;
-            font-size:14px;
-            margin-top:10px;
-            color:#fff;
-        }
-        .status-pending { background:#f39c12; }
-        .status-interview { background:#3498db; }
-        .status-hired { background:#2ecc71; }
+    .cv-preview iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
 
-        /* Right Update Form */
-        .update-form {
-            flex:1 1 55%;
-            background:#fff;
-            border-radius:20px;
-            box-shadow:0 15px 30px rgba(0,0,0,0.08);
-            padding:30px;
-            display:flex;
-            flex-direction:column;
-            gap:20px;
-        }
-        .update-form h2 { color:#3867d6; margin-bottom:15px; font-weight:700; font-size:22px; border-bottom:2px solid #3867d6; display:inline-block; padding-bottom:5px; }
-        .update-form form { display:flex; flex-direction:column; gap:15px; }
-        .update-form .form-group { position:relative; }
-        .update-form label {
-            position:absolute;
-            top:14px;
-            left:15px;
-            color:#999;
-            font-size:14px;
-            pointer-events:none;
-            transition:0.3s;
-        }
-        .update-form input:focus + label,
-        .update-form input:not(:placeholder-shown) + label {
-            top:-10px;
-            left:10px;
-            font-size:12px;
-            color:#3867d6;
-            background:#fff;
-            padding:0 4px;
-        }
-        .update-form input {
-            width:100%;
-            padding:14px 15px;
-            border-radius:8px;
-            border:1px solid #ccc;
-            font-size:16px;
-            outline:none;
-        }
-        .update-form input:focus { border-color:#3867d6; box-shadow:0 0 8px rgba(56,103,214,0.3); }
-
-        .update-form button {
-            padding:14px 25px;
-            font-weight:700;
-            font-size:16px;
-            border:none;
-            border-radius:10px;
-            background: linear-gradient(90deg,#4b7bec,#3867d6);
-            color:#fff;
-            cursor:pointer;
-            transition:0.3s;
-        }
-        .update-form button:hover { background: linear-gradient(90deg,#3867d6,#4b7bec); transform:scale(1.02); }
-
-        /* Gallery */
-        .image-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:15px; }
-        .image-card { border-radius:12px; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.08); position:relative; transition:transform 0.3s, box-shadow 0.3s; }
-        .image-card img { width:100%; height:140px; object-fit:cover; display:block; }
-        .image-card:hover { transform:scale(1.05); box-shadow:0 20px 30px rgba(0,0,0,0.15); }
-        .image-card small {
-            position:absolute;
-            bottom:5px;
-            left:50%;
-            transform:translateX(-50%);
-            background:rgba(0,0,0,0.6);
-            color:#fff;
-            padding:3px 6px;
-            border-radius:6px;
-            font-size:12px;
-        }
-
-        /* CV link */
-        .cv-link a {
-            display:inline-block;
-            padding:12px 25px;
-            border-radius:10px;
-            background: linear-gradient(90deg,#20bf6b,#2bcbba);
-            color:#fff;
-            font-weight:700;
-            text-decoration:none;
-            transition:0.3s;
-        }
-        .cv-link a:hover { background: linear-gradient(90deg,#2bcbba,#20bf6b); transform:scale(1.05); }
-
-        @media(max-width:992px){
-            .container { flex-direction:column; }
-            .info-card, .update-form { flex:1 1 100%; }
-        }
-    </style>
+    .file-info {
+      background: #f8f9fa;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
+
 <body>
-<header>
-    <div class="brand"><i class="fas fa-user-circle"></i> Hồ sơ ứng viên</div>
-    <div>
-        {{ applicant.user.full_name }} |
-        <a href="{{ url_for('main.index') }}"><i class="fas fa-home"></i> Trang chủ</a>
-        <a href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+  <!-- Navbar -->
+  <header class="site-navbar mt-3">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-6 col-xl-2">
+          <h1 class="mb-0"><a href="{{ url_for('main.index') }}" class="text-black h2 mb-0">
+            JobBoard<span class="text-primary">.</span></a></h1>
+        </div>
+
+        <div class="col-10 col-xl-10 d-flex justify-content-end align-items-center">
+          {% if current_user.is_authenticated %}
+            <span class="mr-3 text-dark">Xin chào, <strong>{{ current_user.full_name }}</strong></span>
+            <a href="{{ url_for('main.logout') }}" class="btn btn-outline-primary btn-sm">Đăng xuất</a>
+          {% else %}
+            <a href="{{ url_for('main.login') }}" class="btn btn-primary btn-sm mr-2">Đăng nhập</a>
+            <a href="{{ url_for('main.register') }}" class="btn btn-outline-primary btn-sm">Đăng ký</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
-</header>
+  </header>
 
-<div class="container">
-    <!-- Left Info Card -->
-    <div class="info-card">
-        <img id="avatarPreview" src="{{ avatar_url }}" alt="Avatar">
-        <h2>{{ applicant.user.full_name }}</h2>
-        <p><i class="fas fa-envelope"></i> {{ applicant.user.email }}</p>
-        {% if applicant.user.phone %}
-        <p><i class="fas fa-phone"></i> {{ applicant.user.phone }}</p>
-        {% endif %}
-        {% if applicant.user.address %}
-        <p><i class="fas fa-map-marker-alt"></i> {{ applicant.user.address }}</p>
-        {% endif %}
-        {% if applicant.user.birth_date %}
-        <p><i class="fas fa-birthday-cake"></i> Ngày sinh: {{ applicant.user.birth_date.strftime('%d-%m-%Y') }}</p>
-        {% endif %}
-        {% if applicant.user.hometown %}
-        <p><i class="fas fa-city"></i> Quê quán: {{ applicant.user.hometown }}</p>
-        {% endif %}
-        <p><i class="fas fa-briefcase"></i> Vị trí ứng tuyển: {{ applicant.position_applied or 'Chưa cập nhật' }}</p>
-        <p><i class="fas fa-user-tag"></i> Vai trò: {{ applicant.user.role }}</p>
-        <p><i class="fas fa-calendar-alt"></i> Ngày đăng ký: {{ applicant.user.created_at.strftime('%d-%m-%Y') }}</p>
-        <span class="status-badge 
-            {% if applicant.status=='Đang xử lý' %}status-pending{% elif applicant.status=='Đã phỏng vấn' %}status-interview{% else %}status-hired{% endif %}">
-            {{ applicant.status }}
-        </span>
+  <!-- Hero -->
+  <section class="section-hero overlay inner-page bg-image"
+    style="background-image: url('{{ url_for('static', filename='images/hero_1.jpg') }}'); height:200px;">
+    <div class="container text-center">
+      <div class="row justify-content-center align-items-center">
+        <div class="col-md-10">
+          <h2 class="text-white font-weight-bold mt-5">Hồ sơ ứng viên</h2>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <!-- Right Update Form -->
-    <div class="update-form">
-        <h2>Cập nhật hồ sơ & Upload</h2>
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <input type="text" name="phone_number" placeholder=" " value="{{ applicant.phone_number or '' }}">
-                <label>Số điện thoại ứng viên</label>
-            </div>
-            <div class="form-group">
-                <input type="text" name="position_applied" placeholder=" " value="{{ applicant.position_applied or '' }}">
-                <label>Vị trí ứng tuyển</label>
-            </div>
-            <div class="form-group">
-                <input type="file" name="avatar_file" id="avatar_file" accept="image/*">
-                <label>Chọn ảnh đại diện</label>
-            </div>
-            <div class="form-group">
-                <input type="file" name="cv_file" id="cv_file" accept=".pdf,.doc,.docx">
-                <label>Chọn CV (PDF/DOC)</label>
-            </div>
-            <button type="submit"><i class="fas fa-save"></i> Cập nhật</button>
-        </form>
+  <!-- Profile Section -->
+  <section class="site-section pb-5">
+    <div class="container">
+      <div class="row">
+        <!-- Left: Avatar + Info -->
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-body text-center">
+              <img src="{{ avatar_url }}" alt="Avatar" class="img-fluid rounded-circle mb-3"
+                style="width:150px;height:150px;object-fit:cover;">
+              <h4 class="text-dark mb-0">{{ applicant.user.full_name }}</h4>
+              <p class="text-muted mb-2">{{ applicant.user.email }}</p>
 
-        <!-- Image Gallery -->
-        <section>
-            <h2>Ảnh đại diện / ảnh khác</h2>
-            {% if user_images %}
-            <div class="image-gallery">
-                {% for img in user_images %}
-                <div class="image-card">
-                    <img src="{{ img.image_url }}" alt="Ảnh {{ loop.index }}">
-                    <small>{{ img.uploaded_at.strftime('%d-%m-%Y %H:%M') }}</small>
+              {% if applicant.position_applied %}
+                <p><strong>Vị trí ứng tuyển:</strong> {{ applicant.position_applied }}</p>
+              {% else %}
+                <p class="text-muted">Chưa có vị trí ứng tuyển</p>
+              {% endif %}
+
+              {% if applicant.resume_url %}
+                <div class="file-info mt-2">
+                  <i class="icon-file mr-1"></i>
+                  <strong>CV:</strong>
+                  <a href="{{ applicant.resume_url }}" target="_blank">
+                    {{ applicant.resume_url.split('/')[-1] }}
+                  </a>
                 </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p>Chưa có ảnh nào được tải lên.</p>
-            {% endif %}
-        </section>
 
-        <!-- CV Section -->
-        <section>
-            <h2>CV hiện tại</h2>
-            <div class="cv-link">
-                {% if applicant.resume_url %}
-                    <a href="{{ applicant.resume_url }}" target="_blank"><i class="fas fa-file-pdf"></i> Xem / Tải CV</a>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-3"
+                        data-bs-toggle="modal" data-bs-target="#cvModal">
+                  <i class="icon-eye"></i> Xem CV
+                </button>
+
+              {% else %}
+                <p class="text-muted mt-3">Chưa tải lên CV</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Form update -->
+        <div class="col-md-8">
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+              <h5 class="card-title text-primary font-weight-bold mb-4">Cập nhật thông tin cá nhân</h5>
+              <form method="POST" enctype="multipart/form-data">
+                <div class="form-group mb-3">
+                  <label for="email" class="font-weight-bold">Email liên hệ</label>
+                  <input type="email" name="email" id="email" value="{{ applicant.user.email }}"
+                    class="form-control" placeholder="Nhập email liên hệ">
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="phone_number" class="font-weight-bold">Số điện thoại</label>
+                  <input type="text" name="phone_number" id="phone_number"
+                    value="{{ applicant.phone_number or '' }}" class="form-control" placeholder="Nhập số điện thoại">
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="position_applied" class="font-weight-bold">Vị trí ứng tuyển</label>
+                  <input type="text" name="position_applied" id="position_applied"
+                    value="{{ applicant.position_applied or '' }}" class="form-control"
+                    placeholder="Nhập vị trí bạn muốn ứng tuyển">
+                </div>
+
+                <div class="form-group mb-3">
+                  <label for="cv_file" class="font-weight-bold">Cập nhật CV</label>
+                  <input type="file" name="cv_file" id="cv_file" class="form-control-file">
+                  {% if applicant.resume_url %}
+                    <small class="text-muted">
+                      CV hiện tại:
+                      <a href="{{ applicant.resume_url }}" target="_blank">{{ applicant.resume_url.split('/')[-1] }}</a>
+                    </small>
+                  {% endif %}
+                </div>
+
+                <div class="form-group mb-4">
+                  <label for="avatar_file" class="font-weight-bold">Cập nhật ảnh đại diện</label>
+                  <input type="file" name="avatar_file" id="avatar_file" class="form-control-file">
+                </div>
+
+                <button type="submit" class="btn btn-primary px-4">
+                  <i class="icon-save"></i> Lưu thay đổi
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="icon-arrow-left"></i> Quay lại trang chủ
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CV Modal -->
+      <div class="modal fade" id="cvModal" tabindex="-1" role="dialog" aria-labelledby="cvModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="cvModalLabel">Xem CV của bạn</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+
+            <div class="modal-body cv-preview">
+              {% if applicant.resume_url %}
+                {% set ext = applicant.resume_url.split('.')[-1].lower() %}
+                {% if ext == 'pdf' %}
+                  <iframe src="{{ applicant.resume_url }}" frameborder="0"></iframe>
+                {% elif ext in ['doc', 'docx'] %}
+                  <iframe src="https://view.officeapps.live.com/op/embed.aspx?src={{ request.host_url[:-1] + applicant.resume_url }}" frameborder="0"></iframe>
                 {% else %}
-                    <p>Chưa có CV.</p>
+                  <p class="text-muted text-center">
+                    Định dạng CV không thể hiển thị trực tiếp.
+                    <a href="{{ applicant.resume_url }}" target="_blank">Tải xuống tại đây</a>.
+                  </p>
                 {% endif %}
+              {% else %}
+                <p class="text-muted text-center">Chưa có CV để hiển thị.</p>
+              {% endif %}
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </section>
 
-<script>
-    // Preview avatar trước khi upload
-    const avatarInput = document.getElementById('avatar_file');
-    const avatarPreview = document.getElementById('avatarPreview');
-    avatarInput.addEventListener('change', function(){
-        if(this.files && this.files[0]){
-            const reader = new FileReader();
-            reader.onload = function(e){
-                avatarPreview.src = e.target.result;
-            }
-            reader.readAsDataURL(this.files[0]);
-        }
-    });
-</script>
+  <footer class="site-footer border-top">
+    <div class="container text-center py-3">
+      <p class="text-muted mb-0">DỰ ÁN NHÓM 7 - CÔNG NGHỆ PHẦN MỀM</p>
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script src="{{ url_for('static', filename='index/js/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='index/js/bootstrap.bundle.min.js') }}"></script>
 </body>
+
 </html>

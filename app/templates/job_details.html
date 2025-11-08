@@ -40,6 +40,18 @@
         </div>
     </div>
     <!--/ bradcam_area  -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-3">
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'danger' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
 
     <div class="job_details_area">
         <div class="container">
@@ -120,27 +132,30 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="input_field">
-                                        <input type="text" name="name" placeholder="Họ và tên" required>
+                                        <input type="text" name="name" value="{{ user.full_name }}" placeholder="Họ và tên" required readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="input_field">
-                                        <input type="email" name="email" placeholder="Email" required>
+                                        <input type="email" name="email" value="{{ user.email }}" placeholder="Email" required readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="input_field">
-                                        <input type="text" name="portfolio" placeholder="Website/Portfolio (nếu có)">
+                                        <input type="text" name="portfolio" value="{{ applicant.position_applied if applicant else '' }}" placeholder="Website/Portfolio (nếu có)">
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="input_field">
-                                        <input type="file" name="cv" required>
+                                        <input type="file" name="cv" {% if not applicant or not applicant.resume_url %}required{% endif %}>
+                                        {% if applicant and applicant.resume_url %}
+                                            <small>CV hiện tại: <a href="{{ applicant.resume_url }}" target="_blank">Xem CV</a></small>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-12">
                                     <div class="input_field">
-                                        <textarea name="coverletter" cols="30" rows="10" placeholder="Thư xin việc"></textarea>
+                                        <textarea name="coverletter" cols="30" rows="10" placeholder="Thư xin việc">{{ applicant.cover_letter if applicant and applicant.cover_letter else '' }}</textarea>
                                     </div>
                                 </div>
                                 <div class="col-md-12">
@@ -151,7 +166,6 @@
                             </div>
                         </form>
                     </div>
-
                 </div>
 
                 <div class="col-lg-4">

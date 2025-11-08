@@ -57,5 +57,4 @@ def create_app():
         from flask import request
         return dict(request=request)
 
-
     return app

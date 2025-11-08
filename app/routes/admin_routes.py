@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash,Response,jsonify
 from flask_login import login_required, current_user # Giữ nguyên import này
 from app.models import User, Job # Thêm Job vào đây cho đủ
 from app import db
@@ -18,35 +18,28 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def admin_required(func):
-    """Decorator để kiểm tra xem người dùng hiện tại có phải là Admin không."""
     @login_required
     def wrapper(*args, **kwargs):
-        # Kiểm tra người dùng đã đăng nhập chưa và có vai trò là 'admin' không
-        # THAY 'admin' VÀO ĐÂY BẰNG GIÁ TRỊ ROLE CỦA ADMIN TRONG DB CỦA BẠN
         if not current_user.is_authenticated or current_user.role != 'admin':
             flash('Bạn không có quyền truy cập trang quản trị.', 'danger')
-            return redirect(url_for('main.index')) # Chuyển hướng về trang chủ
+            return redirect(url_for('main.index')) 
         return func(*args, **kwargs)
-    wrapper.__name__ = func.__name__ # Giữ tên hàm gốc
+    wrapper.__name__ = func.__name__ 
     return wrapper
-# --- ROUTES QUẢN TRỊ ---
 
-# 🏠 Trang admin chính
 @admin_bp.route('/')
-@admin_required # Áp dụng quyền Admin
+@admin_required 
 def admin_dashboard():
-    # Thêm kiểm tra quyền admin vào đây không cần thiết vì đã dùng @admin_required
-    total_users = User.query.count()
-    # Nếu tin_tuyen_dung muốn hiển thị tất cả job
+    allusers = User.query.all()
+    recruiters = User.query.filter_by(role='recruiter').all()
     tin_tuyen_dung_list = Job.query.all() 
     return render_template('admin/index.html', 
-                           tai_khoan=User.query.all(), 
-                           ctv=[], 
+                           tai_khoan=allusers,
+                           totaluser=len(allusers),
+                           ctv=recruiters,
                            tin_tuyen_dung=tin_tuyen_dung_list, 
-                           total_users=total_users)
+                           )
 
-
-# 📋 Danh sách tài khoản (và các route liên quan)
 @admin_bp.route('/users')
 @admin_required
 def user_list():
@@ -56,7 +49,6 @@ def user_list():
 @admin_bp.route('/users/create', methods=['GET', 'POST'])
 @admin_required
 def user_add():
-    # ... (giữ nguyên logic thêm user)
     if request.method == 'POST':
         full_name = request.form['full_name']
         email = request.form['email']
