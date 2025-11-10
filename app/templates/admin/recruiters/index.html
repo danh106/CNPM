@@ -19,14 +19,18 @@
         {% for r in recruiters %}
         <tr>
             <td>{{ loop.index }}</td>
-            <td>
+            <td class="text-center">
                 {% if r.avatar_url %}
-                    <img src="{{ url_for('static', filename='uploads/avatars/' ~ r.avatar_url) }}" width="60" class="rounded">
+                    <img src="{{ r.avatar_url }}" 
+                        alt="Avatar" 
+                        class="img-thumbnail mb-2 rounded-circle avatar-img">
                 {% else %}
-                    <img src="{{ url_for('static', filename='images/default-avatar.png') }}" width="60" class="rounded">
+                    <img src="{{ url_for('static', filename='img/default-avatar.png') }}" 
+                        alt="Avatar" 
+                        class="img-thumbnail mb-2 rounded-circle avatar-img">
                 {% endif %}
-                
             </td>
+
             <td>{{ r.full_name }}</td>
             <td>{{ r.email }}</td>
             <td>{{ r.created_at.strftime('%d/%m/%Y') }}</td>

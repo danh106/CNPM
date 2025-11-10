@@ -1,16 +1,15 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash,Response,jsonify
-from flask_login import login_required, current_user # Giữ nguyên import này
-from app.models import User, Job # Thêm Job vào đây cho đủ
-from app import db
+from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
+from flask_login import login_required, current_user 
+from app.models import User, Job, JobPostDetails
 from werkzeug.security import generate_password_hash
+from app import db 
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app
-from datetime import datetime
+from datetime import datetime, date
 from functools import wraps
 
 
-# --- KHAI BÁO CẦN THIẾT ---
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 admin_bp = Blueprint('admin', __name__, template_folder='../templates/admin')
 
@@ -18,13 +17,13 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def admin_required(func):
+    @wraps(func)
     @login_required
     def wrapper(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != 'admin':
             flash('Bạn không có quyền truy cập trang quản trị.', 'danger')
             return redirect(url_for('main.index')) 
         return func(*args, **kwargs)
-    wrapper.__name__ = func.__name__ 
     return wrapper
 
 @admin_bp.route('/')
@@ -60,7 +59,6 @@ def user_add():
             return redirect(url_for('admin.user_add'))
 
         hashed_pw = generate_password_hash(password)
-        # THÊM 'is_admin' NẾU CẦN THIẾT CHO MODEL USER
         user = User(full_name=full_name, email=email, password_hash=hashed_pw, role=role) 
 
         db.session.add(user)
@@ -73,7 +71,6 @@ def user_add():
 @admin_bp.route('/users/edit/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def user_edit(id):
-    # ... (giữ nguyên logic chỉnh sửa user)
     user = User.query.get_or_404(id)
     if request.method == 'POST':
         user.full_name = request.form['full_name']
@@ -94,25 +91,21 @@ def user_edit(id):
 @admin_bp.route('/users/delete/<int:id>', methods=['POST'])
 @admin_required
 def user_delete(id):
-    # ... (giữ nguyên logic xóa user)
     user = User.query.get_or_404(id)
     db.session.delete(user)
     db.session.commit()
     flash('Đã xóa tài khoản!', 'danger')
     return redirect(url_for('admin.user_list'))
 
-# --- ROUTES TUYỂN DỤNG/CTV ---
 @admin_bp.route('/recruiters')
 @admin_required
 def recruiter_list():
-    # ... (giữ nguyên logic)
     recruiters = User.query.filter_by(role='recruiter').all()
     return render_template('admin/recruiters/index.html', recruiters=recruiters)
 
 @admin_bp.route('/recruiters/create', methods=['GET', 'POST'])
 @admin_required
 def recruiter_add():
-    # ... (giữ nguyên logic)
     if request.method == 'POST':
         full_name = request.form['full_name']
         email = request.form['email']
@@ -124,22 +117,19 @@ def recruiter_add():
 
         hashed_pw = generate_password_hash(password)
 
-        # Upload avatar
         avatar_file = request.files.get('avatar')
         avatar_url = None
         if avatar_file and allowed_file(avatar_file.filename):
             filename = secure_filename(avatar_file.filename)
-            # LƯU Ý: Phải đảm bảo 'UPLOAD_FOLDER' đã được cấu hình đúng trong config
             save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename) 
             avatar_file.save(save_path)
-            # LƯU Ý: Đường dẫn này có thể cần thay đổi tùy vào cấu hình static của bạn
             avatar_url = f'/static/uploads/avatars/{filename}' 
 
         new_recruiter = User(
             full_name=full_name,
             email=email,
             password_hash=hashed_pw,
-            role='recruiter', # Role được gán cứng là 'recruiter'
+            role='recruiter',
             avatar_url=avatar_url
         )
 
@@ -153,7 +143,6 @@ def recruiter_add():
 @admin_bp.route('/recruiters/edit/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def recruiter_edit(id):
-    # ... (giữ nguyên logic)
     recruiter = User.query.get_or_404(id)
     if recruiter.role != 'recruiter':
         flash('Không thể chỉnh sửa người không phải cộng tác viên.', 'warning')
@@ -167,7 +156,6 @@ def recruiter_edit(id):
         if new_password:
             recruiter.password_hash = generate_password_hash(new_password)
 
-        # Upload avatar mới nếu có
         avatar_file = request.files.get('avatar')
         if avatar_file and allowed_file(avatar_file.filename):
             filename = secure_filename(avatar_file.filename)
@@ -185,7 +173,6 @@ def recruiter_edit(id):
 @admin_bp.route('/recruiters/delete/<int:id>', methods=['POST'])
 @admin_required
 def recruiter_delete(id):
-    # ... (giữ nguyên logic)
     recruiter = User.query.get_or_404(id)
     if recruiter.role != 'recruiter':
         flash('Không thể xóa người không phải cộng tác viên.', 'danger')
@@ -199,7 +186,6 @@ def recruiter_delete(id):
 @admin_bp.route('/recruiters/view/<int:id>')
 @admin_required
 def recruiter_view(id):
-    # ... (giữ nguyên logic)
     recruiter = User.query.get_or_404(id)
     if recruiter.role != 'recruiter':
         flash('Không thể xem người không phải cộng tác viên.', 'warning')
@@ -207,54 +193,72 @@ def recruiter_view(id):
 
     return render_template('admin/recruiters/view.html', recruiter=recruiter)
 
-# --- ROUTES QUẢN LÝ TIN TUYỂN DỤNG ---
+# ----------------------------------------------------------------------
+#                         ROUTES QUẢN LÝ TIN TUYỂN DỤNG CƠ BẢN
+# ----------------------------------------------------------------------
+
 @admin_bp.route('/jobs')
 @admin_required
 def job_list():
     jobs = Job.query.all()
-    return render_template('admin/jobs/index.html', jobs=jobs)
+    return render_template('admin/jobs/index.html', jobs=jobs, today_date=date.today())
 
 
 @admin_bp.route('/jobs/create', methods=['GET', 'POST'])
 @admin_required
 def job_add():
-    # ... (giữ nguyên logic)
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
         requirements = request.form.get('requirements', '')
+        responsibilities = request.form.get('responsibilities', '')
+        benefits = request.form.get('benefits', '')
         salary_range = request.form.get('salary_range', '')
         location = request.form.get('location', '')
-        deadline_str = request.form.get('deadline', '')
-        # SỬA: Lấy created_by từ người dùng hiện tại (Admin)
+        job_type = request.form.get('job_type', '')
+        vacancy = int(request.form.get('vacancy', 1))
+        duration_days = int(request.form.get('duration_days', 30))
+        
         created_by = current_user.id 
-
-        deadline = datetime.strptime(deadline_str, '%Y-%m-%d') if deadline_str else None
 
         new_job = Job(
             title=title,
             description=description,
             requirements=requirements,
+            responsibilities=responsibilities,
+            benefits=benefits,
             salary_range=salary_range,
             location=location,
-            deadline=deadline,
+            job_type=job_type,
+            vacancy=vacancy,
             created_by=created_by
         )
 
         db.session.add(new_job)
+        db.session.flush()
+
+        # Tạo JobPostDetails và đặt trạng thái là 'Approved' (vì Admin tạo)
+        expires_at = datetime.utcnow() + datetime.timedelta(days=duration_days)
+        job_details = JobPostDetails(
+            job_id=new_job.id,
+            approval_status='Approved',
+            approved_by=current_user.id,
+            approved_at=datetime.utcnow(),
+            duration_days=duration_days,
+            expires_at=expires_at
+        )
+        db.session.add(job_details)
         db.session.commit()
-        flash('Đăng tin tuyển dụng thành công!', 'success')
+
+        flash('Đăng tin tuyển dụng thành công và đã được phê duyệt!', 'success')
         return redirect(url_for('admin.job_list'))
 
-    # Lấy danh sách các user để chọn người đăng tin (Không cần nữa nếu job do Admin tạo)
-    # Nếu muốn cho Admin chọn người tạo: users = User.query.all()
     return render_template('admin/jobs/create.html')
 
 
 @admin_bp.route('/jobs/edit/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def job_edit(id):
-    # ... (giữ nguyên logic)
     job = Job.query.get_or_404(id)
     if request.method == 'POST':
         job.title = request.form['title']
@@ -262,8 +266,16 @@ def job_edit(id):
         job.requirements = request.form.get('requirements', '')
         job.salary_range = request.form.get('salary_range', '')
         job.location = request.form.get('location', '')
-        deadline_str = request.form.get('deadline', '')
-        job.deadline = datetime.strptime(deadline_str, '%Y-%m-%d') if deadline_str else None
+        
+        # Cập nhật chi tiết tin đăng (JobPostDetails)
+        if job.details:
+            # Ví dụ: cho phép Admin gia hạn tin
+            new_duration = int(request.form.get('duration_days', job.details.duration_days))
+            if new_duration != job.details.duration_days:
+                job.details.duration_days = new_duration
+                # Tính lại ngày hết hạn từ ngày hôm nay (gia hạn)
+                job.details.expires_at = datetime.utcnow() + datetime.timedelta(days=new_duration)
+
         db.session.commit()
         flash('Cập nhật tin tuyển dụng thành công!', 'success')
         return redirect(url_for('admin.job_list'))
@@ -274,7 +286,6 @@ def job_edit(id):
 @admin_bp.route('/jobs/delete/<int:id>', methods=['POST'])
 @admin_required
 def job_delete(id):
-    # ... (giữ nguyên logic)
     job = Job.query.get_or_404(id)
     db.session.delete(job)
     db.session.commit()
@@ -285,11 +296,132 @@ def job_delete(id):
 @admin_bp.route('/jobs/view/<int:id>')
 @admin_required
 def job_view(id):
-    # ... (giữ nguyên logic)
     job = Job.query.get_or_404(id)
     return render_template('admin/jobs/view.html', job=job)
 
-# --- LƯU Ý: XÓA HÀM DƯ THỪA ---
-# Xóa hàm 'check_credentials' vì nó không còn được sử dụng khi đã có Flask-Login và Decorator.
-# def check_credentials(username, password):
-#     ...
+
+# ----------------------------------------------------------------------
+#                   ROUTES QUẢN LÝ PHÊ DUYỆT VÀ TỐI ƯU (MỚI)
+# ----------------------------------------------------------------------
+
+@admin_bp.route('/jobs/pending')
+@admin_required
+def job_pending_list():
+    pending_jobs = db.session.query(Job) \
+        .join(JobPostDetails) \
+        .filter(JobPostDetails.approval_status == 'Pending') \
+        .all()
+        
+    return render_template('admin/jobs_post/index.html', 
+                           jobs=pending_jobs,
+                           today_date=date.today())
+
+
+@admin_bp.route('/jobs/approve/<int:id>', methods=['GET'])
+@admin_required
+def job_approve(id):
+    job = Job.query.get_or_404(id)
+    
+    if not job.details:
+        flash('Tin đăng này không có chi tiết phê duyệt.', 'danger')
+        return redirect(url_for('admin.job_pending_list'))
+
+    if job.details.approval_status != 'Pending':
+        flash('Tin đăng này đã được xử lý.', 'warning')
+        return redirect(url_for('admin.job_pending_list'))
+
+    # Cập nhật trạng thái phê duyệt
+    job.details.approval_status = 'Approved'
+    job.details.approved_by = current_user.id
+    job.details.approved_at = datetime.utcnow()
+    
+    # Tính toán ngày hết hạn dựa trên duration_days (ví dụ: từ ngày phê duyệt)
+    duration = job.details.duration_days 
+    job.details.expires_at = datetime.utcnow() + datetime.timedelta(days=duration)
+    
+    db.session.commit()
+    flash(f'Tin tuyển dụng "{job.title}" đã được phê duyệt và đăng tải.', 'success')
+    return redirect(url_for('admin.job_list'))
+
+
+@admin_bp.route('/jobs/featured')
+@admin_required
+def job_featured_list():
+    featured_jobs = db.session.query(Job) \
+        .join(JobPostDetails) \
+        .filter(JobPostDetails.is_featured == True) \
+        .all()
+        
+    return render_template('admin/jobs_post/job_featured_list.html', 
+                           jobs=featured_jobs,
+                           today_date=date.today())
+    
+@admin_bp.route('/jobs/analytics')
+@admin_required
+def job_analytics():
+    
+    total_jobs = Job.query.count()
+    
+    pending_count = db.session.query(JobPostDetails) \
+                      .filter_by(approval_status='Pending').count()
+                      
+    featured_count = db.session.query(JobPostDetails) \
+                       .filter_by(is_featured=True, approval_status='Approved') \
+                       .filter(JobPostDetails.expires_at > datetime.utcnow()).count()
+
+    analytics_data = {
+        'total_jobs': total_jobs,
+        'pending_count': pending_count,
+        'featured_count': featured_count,
+    }
+        
+    return render_template('admin/jobs_post/job_analytics.html', 
+                           data=analytics_data)
+
+
+@admin_bp.route('/jobs/reject/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def job_reject(id):
+    job = Job.query.get_or_404(id)
+    
+    if not job.details:
+        flash('Tin đăng này không có chi tiết phê duyệt.', 'danger')
+        return redirect(url_for('admin.job_pending_list'))
+
+    if job.details.approval_status != 'Pending':
+        flash('Tin đăng này đã được xử lý.', 'warning')
+        return redirect(url_for('admin.job_pending_list'))
+        
+    if request.method == 'POST':
+        rejection_reason = request.form.get('rejection_reason', 'Không đạt yêu cầu đăng tin.')
+        
+        job.details.approval_status = 'Rejected'
+        job.details.approved_by = current_user.id
+        job.details.rejection_reason = rejection_reason
+        job.details.approved_at = datetime.utcnow() 
+        
+        db.session.commit()
+        flash(f'Tin tuyển dụng "{job.title}" đã bị từ chối.', 'danger')
+        return redirect(url_for('admin.job_pending_list'))
+
+    return render_template('admin/jobs/job_reject.html', job=job)
+
+
+@admin_bp.route('/jobs/feature/<int:id>', methods=['GET'])
+@admin_required
+def job_feature(id):
+    job = Job.query.get_or_404(id)
+    
+    if not job.details or job.details.approval_status != 'Approved':
+        flash('Không thể ghim tin khi chưa được phê duyệt.', 'warning')
+        return redirect(url_for('admin.job_list'))
+
+    job.details.is_featured = not job.details.is_featured
+    db.session.commit()
+
+    if job.details.is_featured:
+        flash(f'Tin tuyển dụng "{job.title}" đã được ghim nổi bật.', 'success')
+    else:
+        flash(f'Tin tuyển dụng "{job.title}" đã được bỏ ghim nổi bật.', 'warning')
+        
+    return redirect(url_for('admin.job_list'))

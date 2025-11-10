@@ -1,0 +1,65 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-2 text-gray-800">⭐ Danh Sách Tin Tuyển Dụng Nổi Bật</h1>
+    <p class="mb-4">Quản lý các tin đang được ghim ưu tiên trên trang chủ và trang tìm kiếm.</p>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Các tin đang nổi bật</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th>Tiêu đề</th>
+                            <th class="text-center">Người Đăng</th>
+                            <th class="text-center">Ngày Hết Hạn</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td class="text-center">{{ job.id }}</td>
+                            <td><strong>{{ job.title }}</strong></td>
+                            <td class="text-center">{{ job.created_by_user.full_name if job.created_by_user else 'Admin' }}</td>
+                            <td class="text-center">
+                                {% if job.details and job.details.expires_at %}
+                                    {{ job.details.expires_at.strftime('%d/%m/%Y') }}
+                                    {% if job.details.expires_at.date() < today_date %}
+                                        <span class="badge badge-dark">Đã Hết Hạn</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center" style="min-width: 200px;">
+                                <a href="{{ url_for('admin.job_view', id=job.id) }}" class="btn btn-info btn-sm" title="Xem">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('admin.job_feature', id=job.id) }}" class="btn btn-secondary btn-sm" title="Bỏ ghim">
+                                    <i class="fas fa-thumbtack"></i> Bỏ Ghim
+                                </a>
+                                <form action="{{ url_for('admin.job_delete', id=job.id) }}" method="POST" style="display:inline-block;">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Xóa"
+                                            onclick="return confirm('Bạn có chắc muốn xóa tin tuyển dụng này không?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">Hiện không có tin tuyển dụng nào được đánh dấu nổi bật.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
