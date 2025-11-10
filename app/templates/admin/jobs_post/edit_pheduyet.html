@@ -1,0 +1,78 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Chỉnh sửa tin tuyển dụng - {{ job.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>Chỉnh sửa tin tuyển dụng: {{ job.title }}</h3>
+    <form method="POST">
+        <div class="mb-3">
+            <label>Tiêu đề</label>
+            <input type="text" name="title" class="form-control" value="{{ job.title }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Mô tả</label>
+            <textarea name="description" class="form-control" rows="3">{{ job.description }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Yêu cầu</label>
+            <textarea name="requirements" class="form-control" rows="2">{{ job.requirements }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Trách nhiệm</label>
+            <textarea name="responsibilities" class="form-control" rows="2">{{ job.responsibilities }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Quyền lợi</label>
+            <textarea name="benefits" class="form-control" rows="2">{{ job.benefits }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Mức lương</label>
+            <input type="text" name="salary_range" class="form-control" value="{{ job.salary_range }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Địa điểm</label>
+            <input type="text" name="location" class="form-control" value="{{ job.location }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Loại công việc</label>
+            <input type="text" name="job_type" class="form-control" value="{{ job.job_type }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Số lượng tuyển</label>
+            <input type="number" name="vacancy" class="form-control" value="{{ job.vacancy }}">
+        </div>
+
+        <div class="mb-3">
+            <label>Thời gian hiển thị (ngày)</label>
+            <input type="number" name="duration_days" class="form-control" value="{{ job.details.duration_days if job.details else 30 }}">
+        </div>
+
+        <!-- Phê duyệt -->
+        <div class="mb-3">
+            <label>Trạng thái phê duyệt</label>
+            <select name="approval_status" class="form-control">
+                <option value="Pending" {% if job.details and job.details.approval_status == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Approved" {% if job.details and job.details.approval_status == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Rejected" {% if job.details and job.details.approval_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Lý do từ chối</label>
+            <textarea name="rejection_reason" class="form-control" rows="2">{{ job.details.rejection_reason if job.details and job.details.rejection_reason else '' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Cập nhật</button>
+        <a href="{{ url_for('admin.job_analytics') }}" class="btn btn-secondary">Quay lại Analytics</a>
+    </form>
+</div>
+{% endblock %}

@@ -88,14 +88,14 @@
         </a>
         <div id="collapsePostManagement" class="collapse {% if post_management_active %}show{% endif %}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {% if 'jobs/pending' in request.path %}active{% endif %}" href="{{ url_for('admin.job_pending_list') }}">
-                    <i class="fas fa-hourglass-half"></i> Chờ Phê Duyệt
-                </a>
                 <a class="collapse-item {% if 'jobs/featured' in request.path %}active{% endif %}" href="{{ url_for('admin.job_featured_list') }}">
                     <i class="fas fa-star"></i> Tin Nổi Bật
                 </a>
+                <a class="collapse-item {% if 'jobs/pending' in request.path %}active{% endif %}" href="{{ url_for('admin.job_pending_list') }}">
+                    <i class="fas fa-hourglass-half"></i> Báo cáo
+                </a>
                 <a class="collapse-item {% if 'jobs/analytics' in request.path %}active{% endif %}" href="{{ url_for('admin.job_analytics') }}">
-                    <i class="fas fa-chart-line"></i> Báo cáo
+                    <i class="fas fa-chart-line"></i> Chờ phê duyệt
                 </a>
             </div>
         </div>

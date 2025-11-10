@@ -301,7 +301,7 @@ def job_view(id):
 
 
 # ----------------------------------------------------------------------
-#                   ROUTES QUẢN LÝ PHÊ DUYỆT VÀ TỐI ƯU (MỚI)
+#                   ROUTES QUẢN LÝ PHÊ DUYỆT VÀ TỐI ƯU 
 # ----------------------------------------------------------------------
 
 @admin_bp.route('/jobs/pending')
@@ -330,12 +330,10 @@ def job_approve(id):
         flash('Tin đăng này đã được xử lý.', 'warning')
         return redirect(url_for('admin.job_pending_list'))
 
-    # Cập nhật trạng thái phê duyệt
     job.details.approval_status = 'Approved'
     job.details.approved_by = current_user.id
     job.details.approved_at = datetime.utcnow()
     
-    # Tính toán ngày hết hạn dựa trên duration_days (ví dụ: từ ngày phê duyệt)
     duration = job.details.duration_days 
     job.details.expires_at = datetime.utcnow() + datetime.timedelta(days=duration)
     
@@ -356,28 +354,6 @@ def job_featured_list():
                            jobs=featured_jobs,
                            today_date=date.today())
     
-@admin_bp.route('/jobs/analytics')
-@admin_required
-def job_analytics():
-    
-    total_jobs = Job.query.count()
-    
-    pending_count = db.session.query(JobPostDetails) \
-                      .filter_by(approval_status='Pending').count()
-                      
-    featured_count = db.session.query(JobPostDetails) \
-                       .filter_by(is_featured=True, approval_status='Approved') \
-                       .filter(JobPostDetails.expires_at > datetime.utcnow()).count()
-
-    analytics_data = {
-        'total_jobs': total_jobs,
-        'pending_count': pending_count,
-        'featured_count': featured_count,
-    }
-        
-    return render_template('admin/jobs_post/job_analytics.html', 
-                           data=analytics_data)
-
 
 @admin_bp.route('/jobs/reject/<int:id>', methods=['GET', 'POST'])
 @admin_required
@@ -425,3 +401,80 @@ def job_feature(id):
         flash(f'Tin tuyển dụng "{job.title}" đã được bỏ ghim nổi bật.', 'warning')
         
     return redirect(url_for('admin.job_list'))
+
+@admin_bp.route('/jobs/analytics')
+@admin_required
+def job_analytics():
+    from sqlalchemy import func
+    import datetime
+
+    today = datetime.date.today()
+    last_7_days = [today - datetime.timedelta(days=i) for i in reversed(range(7))]
+
+    total_jobs = Job.query.count()
+    pending_count = db.session.query(JobPostDetails).filter_by(approval_status='Pending').count()
+    active_count = db.session.query(JobPostDetails) \
+        .filter(JobPostDetails.approval_status == 'Approved',
+                JobPostDetails.expires_at > datetime.datetime.utcnow()).count()
+    featured_count = db.session.query(JobPostDetails).filter_by(is_featured=True).count()
+
+    labels = [d.strftime('%d-%m') for d in last_7_days]
+    jobs_per_day = [Job.query.filter(func.date(Job.created_at) == d).count() for d in last_7_days]
+
+    jobs_list = Job.query.order_by(Job.created_at.desc()).limit(10).all()
+
+    analytics_data = {
+        'total_jobs': total_jobs,
+        'pending_count': pending_count,
+        'active_count': active_count,
+        'featured_count': featured_count,
+        'chart_labels': labels,
+        'chart_data': jobs_per_day,
+        'jobs': jobs_list
+    }
+
+    return render_template('admin/jobs_post/job_analytics.html', data=analytics_data)
+
+@admin_bp.route('/jobs/edit-approval/<int:id>', methods=['GET', 'POST'])
+@admin_required
+def job_edit_approval(id):
+    job = Job.query.get_or_404(id)
+
+    if not job.details:
+        job.details = JobPostDetails(
+            job_id=job.id,
+            approval_status='Pending',
+            approved_by=None,
+            approved_at=None,
+            is_featured=False,
+            duration_days=30,
+            expires_at=datetime.utcnow()  
+        )
+        db.session.add(job.details)
+        db.session.commit()
+
+    if request.method == 'POST':
+        status = request.form.get('approval_status')
+        reason = request.form.get('rejection_reason', '').strip()
+        
+        job.details.approval_status = status
+
+        if status == 'Approved':
+            job.details.approved_by = current_user.id
+            job.details.approved_at = datetime.utcnow()
+            job.details.rejection_reason = None  
+        elif status == 'Rejected':
+            job.details.approved_by = current_user.id
+            job.details.approved_at = datetime.utcnow()
+            job.details.rejection_reason = reason
+        else:  # Pending
+            job.details.approved_by = None
+            job.details.approved_at = None
+            job.details.rejection_reason = None
+
+        db.session.commit()
+        flash(f'Tin tuyển dụng "{job.title}" đã được cập nhật trạng thái phê duyệt.', 'success')
+        return redirect(url_for('admin.job_analytics'))
+
+    return render_template('admin/jobs_post/edit_pheduyet.html', job=job)
+
