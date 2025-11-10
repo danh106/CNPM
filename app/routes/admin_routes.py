@@ -474,7 +474,7 @@ def job_edit_approval(id):
 
         db.session.commit()
         flash(f'Tin tuyển dụng "{job.title}" đã được cập nhật trạng thái phê duyệt.', 'success')
-        return redirect(url_for('admin.job_analytics'))
+        return redirect(url_for(' admin.job_analytics '))
 
     return render_template('admin/jobs_post/edit_pheduyet.html', job=job)
 
