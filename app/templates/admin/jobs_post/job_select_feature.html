@@ -1,0 +1,50 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-2 text-gray-800">📌 Chọn Tin để Ghim Nổi Bật</h1>
+    <p class="mb-4">Chọn các tin tuyển dụng đã được phê duyệt và chưa nổi bật để thêm vào danh sách ưu tiên.</p>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách Tin có thể Ghim</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th>Tiêu đề</th>
+                            <th class="text-center">Người Đăng</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td class="text-center">{{ job.id }}</td>
+                            <td><strong>{{ job.title }}</strong></td>
+                            <td class="text-center">
+                                {{ job.created_by_user.full_name if job.created_by_user else 'Admin' }}
+                            </td>
+                            <td class="text-center">
+                                <a href="{{ url_for('admin.job_feature', id=job.id) }}" class="btn btn-success btn-sm" title="Ghim nổi bật">
+                                    <i class="fas fa-thumbtack"></i> Ghim Ngay
+                                </a>
+                                <a href="{{ url_for('admin.job_view', id=job.id) }}" class="btn btn-info btn-sm" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">Không có tin tuyển dụng nào đủ điều kiện để ghim nổi bật.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

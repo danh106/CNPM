@@ -4,9 +4,10 @@ from app.models import User, Job, JobPostDetails
 from werkzeug.security import generate_password_hash
 from app import db 
 import os
+from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from flask import current_app
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
 
 
@@ -193,9 +194,6 @@ def recruiter_view(id):
 
     return render_template('admin/recruiters/view.html', recruiter=recruiter)
 
-# ----------------------------------------------------------------------
-#                         ROUTES QUẢN LÝ TIN TUYỂN DỤNG CƠ BẢN
-# ----------------------------------------------------------------------
 
 @admin_bp.route('/jobs')
 @admin_required
@@ -237,7 +235,6 @@ def job_add():
         db.session.add(new_job)
         db.session.flush()
 
-        # Tạo JobPostDetails và đặt trạng thái là 'Approved' (vì Admin tạo)
         expires_at = datetime.utcnow() + datetime.timedelta(days=duration_days)
         job_details = JobPostDetails(
             job_id=new_job.id,
@@ -267,13 +264,10 @@ def job_edit(id):
         job.salary_range = request.form.get('salary_range', '')
         job.location = request.form.get('location', '')
         
-        # Cập nhật chi tiết tin đăng (JobPostDetails)
         if job.details:
-            # Ví dụ: cho phép Admin gia hạn tin
             new_duration = int(request.form.get('duration_days', job.details.duration_days))
             if new_duration != job.details.duration_days:
                 job.details.duration_days = new_duration
-                # Tính lại ngày hết hạn từ ngày hôm nay (gia hạn)
                 job.details.expires_at = datetime.utcnow() + datetime.timedelta(days=new_duration)
 
         db.session.commit()
@@ -299,10 +293,6 @@ def job_view(id):
     job = Job.query.get_or_404(id)
     return render_template('admin/jobs/view.html', job=job)
 
-
-# ----------------------------------------------------------------------
-#                   ROUTES QUẢN LÝ PHÊ DUYỆT VÀ TỐI ƯU (MỚI)
-# ----------------------------------------------------------------------
 
 @admin_bp.route('/jobs/pending')
 @admin_required
@@ -407,21 +397,55 @@ def job_reject(id):
     return render_template('admin/jobs/job_reject.html', job=job)
 
 
-@admin_bp.route('/jobs/feature/<int:id>', methods=['GET'])
+@admin_bp.route('/jobs/feature/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def job_feature(id):
     job = Job.query.get_or_404(id)
     
-    if not job.details or job.details.approval_status != 'Approved':
-        flash('Không thể ghim tin khi chưa được phê duyệt.', 'warning')
+    if not job.details:
+        flash('Lỗi: Tin tuyển dụng này không có chi tiết bài đăng.', 'danger')
         return redirect(url_for('admin.job_list'))
 
-    job.details.is_featured = not job.details.is_featured
+    is_currently_featured = job.details.is_featured
+    job.details.is_featured = not is_currently_featured
+    
     db.session.commit()
 
-    if job.details.is_featured:
-        flash(f'Tin tuyển dụng "{job.title}" đã được ghim nổi bật.', 'success')
+    if is_currently_featured:
+        flash(f'Đã gỡ bỏ tin "{job.title}" khỏi danh sách nổi bật.', 'warning')
     else:
-        flash(f'Tin tuyển dụng "{job.title}" đã được bỏ ghim nổi bật.', 'warning')
+        flash(f'Đã ghim tin "{job.title}" vào danh sách nổi bật!', 'success')
+    
+    return redirect(url_for('admin.job_featured_list'))
+
+@admin_bp.route('/jobs/select-feature')
+@admin_required
+def job_select_feature():
+    jobs_to_feature = db.session.query(Job) \
+        .join(JobPostDetails) \
+        .filter(
+            or_(
+                JobPostDetails.approval_status == 'Approved',
+                JobPostDetails.approval_status == 'Rejected'
+            )
+        ) \
+        .filter(JobPostDetails.is_featured == False) \
+        .filter(JobPostDetails.expires_at > datetime.utcnow()) \
+        .all()
         
-    return redirect(url_for('admin.job_list'))
+    return render_template('admin/jobs_post/job_select_feature.html', 
+                           jobs=jobs_to_feature)
+
+@admin_bp.route('/jobs/soft-delete/<int:id>', methods=['POST'])
+@admin_required
+def job_soft_delete(id):
+    
+    job = Job.query.get_or_404(id)
+    
+    if job.details: 
+        job.details.approval_status = 'Rejected' 
+        job.details.is_featured = False 
+        
+    db.session.commit()
+    flash(f'Tin tuyển dụng "{job.title}" đã được ẩn hoàn toàn khỏi hệ thống (Đã chuyển sang trạng thái Bị Từ Chối).', 'success')
+    return redirect(url_for('admin.job_featured_list'))
