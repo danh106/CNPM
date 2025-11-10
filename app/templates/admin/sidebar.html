@@ -1,6 +1,5 @@
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
-    <!-- Logo -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('admin.admin_dashboard') }}">
         <div class="sidebar-brand-icon rotate-n-15">
             <i class="fas fa-briefcase"></i>
@@ -10,7 +9,6 @@
 
     <hr class="sidebar-divider my-0">
 
-    <!-- Dashboard -->
     <li class="nav-item {% if request.path.rstrip('/') == url_for('admin.admin_dashboard').rstrip('/') %}active{% endif %}">
         <a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">
             <i class="fas fa-fw fa-tachometer-alt"></i>
@@ -21,10 +19,9 @@
     <hr class="sidebar-divider">
 
     <div class="sidebar-heading">
-        Quản lý
+        Quản lý chung
     </div>
 
-    <!-- Users Menu -->
     {% set user_active = request.path.startswith(url_for('admin.user_list')[:-1]) or request.path.startswith(url_for('admin.user_add')[:-1]) %}
     <li class="nav-item {% if user_active %}active{% endif %}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsers"
@@ -40,7 +37,6 @@
         </div>
     </li>
 
-    <!-- Recruiters Menu -->
     {% set recruiter_active = request.path.startswith(url_for('admin.recruiter_list')[:-1]) or request.path.startswith(url_for('admin.recruiter_add')[:-1]) %}
     <li class="nav-item {% if recruiter_active %}active{% endif %}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRecruiters"
@@ -56,8 +52,20 @@
         </div>
     </li>
 
-    <!-- Jobs Menu -->
-    {% set job_active = request.path.startswith(url_for('admin.job_list')[:-1]) or request.path.startswith(url_for('admin.job_add')[:-1]) %}
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-heading">
+        Quản lý Tuyển dụng
+    </div>
+
+    {# -------------------------------------------------------------------------------------------------------------------------------- #}
+    {% set advanced_job_routes = [url_for('admin.job_pending_list'), url_for('admin.job_featured_list'), url_for('admin.job_analytics')] %}
+    {% set post_management_active = request.path in advanced_job_routes or 'jobs/pending' in request.path or 'jobs/featured' in request.path or 'jobs/analytics' in request.path or 'jobs/reject' in request.path %}
+    
+    {# BƯỚC SỬA LỖI QUAN TRỌNG: Thêm điều kiện LOẠI TRỪ nếu đang ở các trang quản lý tối ưu #}
+    {% set is_job_list_or_add = request.path.startswith(url_for('admin.job_list')[:-1]) or request.path.startswith(url_for('admin.job_add')[:-1]) or 'jobs/edit' in request.path %}
+    {% set job_active = is_job_list_or_add and not post_management_active %}
+    
     <li class="nav-item {% if job_active %}active{% endif %}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseJobs"
            aria-expanded="{{ 'true' if job_active else 'false' }}" aria-controls="collapseJobs">
@@ -71,6 +79,28 @@
             </div>
         </div>
     </li>
+
+    <li class="nav-item {% if post_management_active %}active{% endif %}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePostManagement"
+           aria-expanded="{{ 'true' if post_management_active else 'false' }}" aria-controls="collapsePostManagement">
+            <i class="fas fa-tasks"></i>
+            <span>Duyệt & Tối ưu Tin</span>
+        </a>
+        <div id="collapsePostManagement" class="collapse {% if post_management_active %}show{% endif %}" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item {% if 'jobs/pending' in request.path %}active{% endif %}" href="{{ url_for('admin.job_pending_list') }}">
+                    <i class="fas fa-hourglass-half"></i> Chờ Phê Duyệt
+                </a>
+                <a class="collapse-item {% if 'jobs/featured' in request.path %}active{% endif %}" href="{{ url_for('admin.job_featured_list') }}">
+                    <i class="fas fa-star"></i> Tin Nổi Bật
+                </a>
+                <a class="collapse-item {% if 'jobs/analytics' in request.path %}active{% endif %}" href="{{ url_for('admin.job_analytics') }}">
+                    <i class="fas fa-chart-line"></i> Báo cáo
+                </a>
+            </div>
+        </div>
+    </li>
+    {# -------------------------------------------------------------------------------------------------------------------------------- #}
 
     <hr class="sidebar-divider d-none d-md-block">
 

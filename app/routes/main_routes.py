@@ -28,12 +28,12 @@ def index():
 
     return render_template('index.html', user=user_data, jobs=jobs)
 
-@main_bp.route('/admin/index')
+@main_bp.route('/admin')
 @login_required
 def admin_index():
     if current_user.role != 'admin':
         flash('Bạn không có quyền truy cập!', 'danger')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.login'))
     return render_template('admin/index.html')
 
 @main_bp.route('/login', methods=['GET', 'POST'])

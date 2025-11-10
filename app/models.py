@@ -94,6 +94,7 @@ class Job(db.Model):
 
     created_by_user = db.relationship('User', back_populates='jobs_posted')
     applications = db.relationship('Application', back_populates='job', cascade="all, delete-orphan")
+    details = db.relationship('JobPostDetails', back_populates='job', uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Job {self.title}>"
@@ -136,3 +137,25 @@ class UserImages(db.Model):
 
     user = db.relationship('User', back_populates='images')
     applicant_avatar = db.relationship('Applicant', back_populates='avatar_image', uselist=False)
+
+class JobPostDetails(db.Model):
+    __tablename__ = 'job_post_details'
+
+    job_id = db.Column(db.Integer, db.ForeignKey('jobs.id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True, comment='Mã công việc')
+    
+    approval_status = db.Column(db.Enum('Draft', 'Pending', 'Approved', 'Rejected'), default='Draft', nullable=False, comment='Trạng thái phê duyệt')
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL', onupdate='CASCADE'), comment='ID người phê duyệt')
+    approved_at = db.Column(db.DateTime, comment='Thời điểm phê duyệt')
+    rejection_reason = db.Column(db.Text, comment='Lý do từ chối')
+    duration_days = db.Column(db.Integer, default=30, nullable=False, comment='Số ngày tồn tại')
+    expires_at = db.Column(db.DateTime, comment='Thời điểm hết hạn')
+    is_featured = db.Column(db.Boolean, default=False, nullable=False, comment='Tin nổi bật')
+
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    job = db.relationship('Job', back_populates='details', uselist=False)
+    approved_by_user = db.relationship('User', foreign_keys=[approved_by])
+
+    def __repr__(self):
+        return f"<JobDetails JobID={self.job_id}, Status={self.approval_status}>"
