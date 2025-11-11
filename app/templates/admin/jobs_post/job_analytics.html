@@ -1,160 +1,55 @@
-{% extends 'admin/layout.html' %}
-
-{% block title %}Analytics Tin Tuyển Dụng{% endblock %}
-
+{% extends "admin/layout.html" %}
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">📊 Báo Cáo & Thống Kê Tuyển Dụng</h1>
 
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary mb-3">
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Tổng tin tuyển dụng</h5>
-                    <p class="card-text display-5">{{ data.total_jobs }}</p>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng Số Tin Đã Đăng</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.total_jobs }}</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-newspaper fa-2x text-gray-300"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Pending</h5>
-                    <p class="card-text display-5">{{ data.pending_count }}</p>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Tin Chờ Phê Duyệt</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.pending_count }}</div>
+                            <div class="text-xs mt-1"><a href="{{ url_for('admin.job_pending_list') }}">Xem chi tiết</a></div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-hourglass-half fa-2x text-gray-300"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success mb-3">
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">Đang làm / Nổi bật</h5>
-                    <p class="card-text display-5">{{ data.active_count }}</p>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tin Nổi Bật Đang Hoạt Động</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.featured_count }}</div>
+                            <div class="text-xs mt-1"><a href="{{ url_for('admin.job_featured_list') }}">Quản lý tin nổi bật</a></div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-star fa-2x text-gray-300"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="card mb-4">
-        <div class="card-header">
-            Biểu đồ số tin tuyển dụng trong 7 ngày gần nhất
-        </div>
-        <div class="card-body">
-            <canvas id="jobsChart" height="100"></canvas>
-        </div>
-    </div>
-
-    <!-- Danh sách tin -->
-    <div class="card">
-        <div class="card-header">
-            Danh sách tất cả tin tuyển dụng
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Tiêu đề</th>
-                        <th>Trạng thái</th>
-                        <th>Người phê duyệt</th>
-                        <th>Ngày phê duyệt</th>
-                        <th>Lý do từ chối</th>
-                        <th>Ngày tạo</th>
-                        <th>Ngày hết hạn</th>
-                        <th>Nổi bật</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for job in data.jobs %}
-                    <tr>
-                        <td>{{ job.title }}</td>
-                        <td>
-                            {% if job.details %}
-                                {{ job.details.approval_status }}
-                            {% else %}
-                                Không có chi tiết
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if job.details and job.details.approved_by %}
-                                {{ job.details.approved_by }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if job.details and job.details.approved_at %}
-                                {{ job.details.approved_at.strftime('%d-%m-%Y %H:%M') }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if job.details and job.details.rejection_reason %}
-                                {{ job.details.rejection_reason }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>{{ job.created_at.strftime('%d-%m-%Y') }}</td>
-                        <td>
-                            {% if job.details and job.details.expires_at %}
-                                {{ job.details.expires_at.strftime('%d-%m-%Y') }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if job.details and job.details.is_featured %}
-                                Có
-                            {% else %}
-                                Không
-                            {% endif %}
-                        </td>
-                        <td>
-<a href="{{ url_for('admin.job_edit_approval', id=job.id) }}" class="btn btn-sm btn-primary">Sửa</a>
-                            <form action="{{ url_for('admin.job_delete', id=job.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa?')">Xóa</button>
-                            </form>
-                            {% if job.details %}
-                                <a href="{{ url_for('admin.job_feature', id=job.id) }}" class="btn btn-sm btn-warning">
-                                    {% if job.details.is_featured %}Bỏ nổi bật{% else %}Ghim nổi bật{% endif %}
-                                </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="card shadow mb-4">
+        <div class="card-body"><p>Nội dung biểu đồ và thống kê chi tiết...</p></div>
     </div>
 </div>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const ctx = document.getElementById('jobsChart').getContext('2d');
-    const jobsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ data.chart_labels|tojson }},
-            datasets: [{
-                label: 'Số tin tuyển dụng',
-                data: {{ data.chart_data|tojson }},
-                fill: true,
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: { mode: 'index', intersect: false }
-            },
-            scales: {
-                y: { beginAtZero: true, precision:0 }
-            }
-        }
-    });
-</script>
-
 {% endblock %}

@@ -6,8 +6,9 @@ from app import db
 import os
 from werkzeug.utils import secure_filename
 from flask import current_app
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
+from sqlalchemy import func, or_
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -193,9 +194,7 @@ def recruiter_view(id):
 
     return render_template('admin/recruiters/view.html', recruiter=recruiter)
 
-# ----------------------------------------------------------------------
-#                         ROUTES QUẢN LÝ TIN TUYỂN DỤNG CƠ BẢN
-# ----------------------------------------------------------------------
+
 
 @admin_bp.route('/jobs')
 @admin_required
@@ -237,8 +236,7 @@ def job_add():
         db.session.add(new_job)
         db.session.flush()
 
-        # Tạo JobPostDetails và đặt trạng thái là 'Approved' (vì Admin tạo)
-        expires_at = datetime.utcnow() + datetime.timedelta(days=duration_days)
+        expires_at = datetime.utcnow() + timedelta(days=duration_days)
         job_details = JobPostDetails(
             job_id=new_job.id,
             approval_status='Approved',
@@ -267,14 +265,11 @@ def job_edit(id):
         job.salary_range = request.form.get('salary_range', '')
         job.location = request.form.get('location', '')
         
-        # Cập nhật chi tiết tin đăng (JobPostDetails)
         if job.details:
-            # Ví dụ: cho phép Admin gia hạn tin
             new_duration = int(request.form.get('duration_days', job.details.duration_days))
             if new_duration != job.details.duration_days:
                 job.details.duration_days = new_duration
-                # Tính lại ngày hết hạn từ ngày hôm nay (gia hạn)
-                job.details.expires_at = datetime.utcnow() + datetime.timedelta(days=new_duration)
+                job.details.expires_at = datetime.utcnow() + timedelta(days=new_duration)
 
         db.session.commit()
         flash('Cập nhật tin tuyển dụng thành công!', 'success')
@@ -300,10 +295,6 @@ def job_view(id):
     return render_template('admin/jobs/view.html', job=job)
 
 
-# ----------------------------------------------------------------------
-#                   ROUTES QUẢN LÝ PHÊ DUYỆT VÀ TỐI ƯU 
-# ----------------------------------------------------------------------
-
 @admin_bp.route('/jobs/pending')
 @admin_required
 def job_pending_list():
@@ -312,10 +303,22 @@ def job_pending_list():
         .filter(JobPostDetails.approval_status == 'Pending') \
         .all()
         
-    return render_template('admin/jobs_post/index.html', 
+    return render_template('admin/jobs_post/job_pending.html', 
                            jobs=pending_jobs,
                            today_date=date.today())
-
+    
+@admin_bp.route('/jobs/active') 
+@admin_required
+def job_active_list(): 
+    active_jobs = db.session.query(Job) \
+        .join(JobPostDetails) \
+        .filter(JobPostDetails.approval_status == 'Approved') \
+        .filter(JobPostDetails.expires_at > datetime.utcnow()) \
+        .all() 
+    
+    return render_template('admin/jobs_post/job_active_list.html', 
+                           jobs=active_jobs,
+                           today_date=date.today())
 
 @admin_bp.route('/jobs/approve/<int:id>', methods=['GET'])
 @admin_required
@@ -335,25 +338,83 @@ def job_approve(id):
     job.details.approved_at = datetime.utcnow()
     
     duration = job.details.duration_days 
-    job.details.expires_at = datetime.utcnow() + datetime.timedelta(days=duration)
+    job.details.expires_at = datetime.utcnow() + timedelta(days=duration)
     
     db.session.commit()
     flash(f'Tin tuyển dụng "{job.title}" đã được phê duyệt và đăng tải.', 'success')
     return redirect(url_for('admin.job_list'))
 
-
 @admin_bp.route('/jobs/featured')
 @admin_required
-def job_featured_list():
+def job_featured_list():    
     featured_jobs = db.session.query(Job) \
         .join(JobPostDetails) \
         .filter(JobPostDetails.is_featured == True) \
+        .filter(JobPostDetails.approval_status == 'Approved') \
+        .filter(JobPostDetails.expires_at > datetime.utcnow()) \
         .all()
         
     return render_template('admin/jobs_post/job_featured_list.html', 
                            jobs=featured_jobs,
                            today_date=date.today())
     
+@admin_bp.route('/jobs/select-feature')
+@admin_required
+def job_select_feature():
+    jobs_to_feature = db.session.query(Job) \
+        .join(JobPostDetails) \
+        .filter(
+            or_(
+                JobPostDetails.approval_status == 'Approved',
+                JobPostDetails.approval_status == 'Rejected'
+            )
+        ) \
+        .filter(JobPostDetails.is_featured == False) \
+        .filter(JobPostDetails.expires_at > datetime.utcnow()) \
+        .all()
+        
+    return render_template('admin/jobs_post/job_select_feature.html', 
+                           jobs=jobs_to_feature)
+    
+@admin_bp.route('/jobs/feature/<int:id>', methods=['GET'])
+@admin_required
+def job_feature(id):
+    job = Job.query.get_or_404(id)
+    
+    if not job.details:
+        flash('Lỗi: Tin tuyển dụng này không có chi tiết bài đăng.', 'danger')
+        return redirect(url_for('admin.job_list'))
+
+    is_currently_featured = job.details.is_featured
+    job.details.is_featured = not is_currently_featured
+    
+    if job.details.is_featured:
+        job.details.approval_status = 'Approved' 
+
+    db.session.commit()
+
+    if is_currently_featured:
+        flash(f'Đã gỡ bỏ tin "{job.title}" khỏi danh sách nổi bật.', 'warning')
+    else:
+        flash(f'Đã ghim tin "{job.title}" vào danh sách nổi bật!', 'success')
+    
+    return redirect(url_for('admin.job_featured_list'))
+
+@admin_bp.route('/jobs/soft-delete/<int:id>', methods=['POST'])
+@admin_required
+def job_soft_delete(id):
+    job = Job.query.get_or_404(id)
+    
+    if job.details: 
+        job.details.approval_status = 'Rejected' 
+        
+        job.details.is_featured = False 
+    
+    db.session.commit()
+    
+    flash(f'Tin tuyển dụng "{job.title}" đã được ẩn hoàn toàn khỏi hệ thống.', 'success')
+    
+    return redirect(url_for('admin.job_featured_list'))
 
 @admin_bp.route('/jobs/reject/<int:id>', methods=['GET', 'POST'])
 @admin_required
@@ -380,42 +441,21 @@ def job_reject(id):
         flash(f'Tin tuyển dụng "{job.title}" đã bị từ chối.', 'danger')
         return redirect(url_for('admin.job_pending_list'))
 
-    return render_template('admin/jobs/job_reject.html', job=job)
+    return render_template('admin/jobs_post/job_reject.html', job=job)
 
-
-@admin_bp.route('/jobs/feature/<int:id>', methods=['GET'])
-@admin_required
-def job_feature(id):
-    job = Job.query.get_or_404(id)
-    
-    if not job.details or job.details.approval_status != 'Approved':
-        flash('Không thể ghim tin khi chưa được phê duyệt.', 'warning')
-        return redirect(url_for('admin.job_list'))
-
-    job.details.is_featured = not job.details.is_featured
-    db.session.commit()
-
-    if job.details.is_featured:
-        flash(f'Tin tuyển dụng "{job.title}" đã được ghim nổi bật.', 'success')
-    else:
-        flash(f'Tin tuyển dụng "{job.title}" đã được bỏ ghim nổi bật.', 'warning')
-        
-    return redirect(url_for('admin.job_list'))
 
 @admin_bp.route('/jobs/analytics')
 @admin_required
 def job_analytics():
-    from sqlalchemy import func
-    import datetime
 
-    today = datetime.date.today()
-    last_7_days = [today - datetime.timedelta(days=i) for i in reversed(range(7))]
+    today = date.today()
+    last_7_days = [today - timedelta(days=i) for i in reversed(range(7))]
 
     total_jobs = Job.query.count()
     pending_count = db.session.query(JobPostDetails).filter_by(approval_status='Pending').count()
     active_count = db.session.query(JobPostDetails) \
         .filter(JobPostDetails.approval_status == 'Approved',
-                JobPostDetails.expires_at > datetime.datetime.utcnow()).count()
+                JobPostDetails.expires_at > datetime.utcnow()).count()
     featured_count = db.session.query(JobPostDetails).filter_by(is_featured=True).count()
 
     labels = [d.strftime('%d-%m') for d in last_7_days]
@@ -474,7 +514,7 @@ def job_edit_approval(id):
 
         db.session.commit()
         flash(f'Tin tuyển dụng "{job.title}" đã được cập nhật trạng thái phê duyệt.', 'success')
-        return redirect(url_for(' admin.job_analytics '))
+        return redirect(url_for('admin.job_analytics'))
 
     return render_template('admin/jobs_post/edit_pheduyet.html', job=job)
 

@@ -1,0 +1,83 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-2 text-gray-800">✅ Danh Sách Tin Tuyển Dụng Đang Hoạt Động</h1>
+    <p class="mb-4">Tổng hợp các tin đã được phê duyệt và còn hiệu lực. Bạn có thể quản lý, sửa đổi hoặc ẩn (xóa mềm) các tin này.</p>
+    <div class="row mb-3">
+        <div class="col text-right">
+            <a href="{{ url_for('admin.job_pending_list') }}" class="btn btn-primary btn-icon-split">
+                <span class="icon text-white-50">
+                    <i class="fas fa-plus"></i>
+                </span>
+                <span class="text">Phê duyệt tin</span>
+            </a>
+        </div>
+    </div>
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th>Tiêu đề</th>
+                            <th class="text-center">Người Đăng</th>
+                            <th class="text-center">Ngày Hết Hạn</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td class="text-center">{{ job.id }}</td>
+                            <td><strong>{{ job.title }}</strong></td>
+                            <td class="text-center">{{ job.created_by_user.full_name if job.created_by_user else 'Admin' }}</td>
+                            <td class="text-center">
+                                {% if job.details and job.details.expires_at %}
+                                    {{ job.details.expires_at.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if job.details.is_featured %}
+                                    <span class="badge badge-primary">Nổi bật</span>
+                                {% else %}
+                                    <span class="badge badge-success">Đang hoạt động</span>
+                                {% endif %}
+                                
+                                {% if job.details.expires_at and job.details.expires_at.date() < today_date %}
+                                    <span class="badge badge-danger">Đã hết hạn</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center" style="min-width: 250px;">
+                                <a href="{{ url_for('admin.job_view', id=job.id) }}" class="btn btn-info btn-sm" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('admin.job_edit', id=job.id) }}" class="btn btn-warning btn-sm" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('admin.job_feature', id=job.id) }}" class="btn {% if job.details.is_featured %}btn-secondary{% else %}btn-primary{% endif %} btn-sm" title="Ghim/Bỏ ghim nổi bật">
+                                    <i class="fas fa-thumbtack"></i> 
+                                </a>
+                                <form action="{{ url_for('admin.job_soft_delete', id=job.id) }}" method="POST" style="display:inline-block;">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Ẩn tin/Xóa mềm"
+                                            onclick="return confirm('Bạn có chắc muốn ẩn tin tuyển dụng này khỏi hệ thống không?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Không có tin tuyển dụng nào đang hoạt động.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

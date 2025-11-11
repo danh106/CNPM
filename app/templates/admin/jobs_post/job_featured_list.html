@@ -4,10 +4,18 @@
     <h1 class="h3 mb-2 text-gray-800">⭐ Danh Sách Tin Tuyển Dụng Nổi Bật</h1>
     <p class="mb-4">Quản lý các tin đang được ghim ưu tiên trên trang chủ và trang tìm kiếm.</p>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Các tin đang nổi bật</h6>
+    <div class="row mb-3">
+        <div class="col text-right">
+            <a href="{{ url_for('admin.job_select_feature') }}" class="btn btn-primary btn-icon-split">
+                <span class="icon text-white-50">
+                    <i class="fas fa-plus"></i>
+                </span>
+                <span class="text">Thêm Tin Nổi Bật</span>
+            </a>
         </div>
+    </div>
+    
+    <div class="card shadow mb-4">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
@@ -29,23 +37,17 @@
                             <td class="text-center">
                                 {% if job.details and job.details.expires_at %}
                                     {{ job.details.expires_at.strftime('%d/%m/%Y') }}
-                                    {% if job.details.expires_at.date() < today_date %}
-                                        <span class="badge badge-dark">Đã Hết Hạn</span>
-                                    {% endif %}
                                 {% else %}
                                     <span class="text-muted">N/A</span>
                                 {% endif %}
                             </td>
                             <td class="text-center" style="min-width: 200px;">
-                                <a href="{{ url_for('admin.job_view', id=job.id) }}" class="btn btn-info btn-sm" title="Xem">
-                                    <i class="fas fa-eye"></i>
-                                </a>
                                 <a href="{{ url_for('admin.job_feature', id=job.id) }}" class="btn btn-secondary btn-sm" title="Bỏ ghim">
                                     <i class="fas fa-thumbtack"></i> Bỏ Ghim
                                 </a>
-                                <form action="{{ url_for('admin.job_delete', id=job.id) }}" method="POST" style="display:inline-block;">
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Xóa"
-                                            onclick="return confirm('Bạn có chắc muốn xóa tin tuyển dụng này không?')">
+                                <form action="{{ url_for('admin.job_soft_delete', id=job.id) }}" method="POST" style="display:inline-block;">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Xóa mềm"
+                                            onclick="return confirm('Bạn có chắc muốn ẩn/xóa tin tuyển dụng này không?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
