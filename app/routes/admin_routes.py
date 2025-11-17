@@ -33,11 +33,20 @@ def admin_dashboard():
     allusers = User.query.all()
     recruiters = User.query.filter_by(role='recruiter').all()
     tin_tuyen_dung_list = Job.query.all() 
+    
+    pending_count = db.session.query(JobPostDetails) \
+                      .filter_by(approval_status='Pending').count()
+                      
+    latest_jobs = Job.query.order_by(Job.created_at.desc()).limit(5).all()
+
     return render_template('admin/index.html', 
                            tai_khoan=allusers,
                            totaluser=len(allusers),
                            ctv=recruiters,
                            tin_tuyen_dung=tin_tuyen_dung_list, 
+                           
+                           pending_count=pending_count,
+                           latest_jobs=latest_jobs
                            )
 
 @admin_bp.route('/users')
@@ -206,77 +215,110 @@ def job_list():
 @admin_bp.route('/jobs/create', methods=['GET', 'POST'])
 @admin_required
 def job_add():
+    # Chuẩn bị danh sách người dùng cho dropdown (cần cho cả GET và POST)
+    users_list = User.query.filter(User.role.in_(['admin', 'recruiter'])).all()
+
     if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        requirements = request.form.get('requirements', '')
-        responsibilities = request.form.get('responsibilities', '')
-        benefits = request.form.get('benefits', '')
-        salary_range = request.form.get('salary_range', '')
-        location = request.form.get('location', '')
-        job_type = request.form.get('job_type', '')
-        vacancy = int(request.form.get('vacancy', 1))
-        duration_days = int(request.form.get('duration_days', 30))
-        
-        created_by = current_user.id 
+        try:
+            title = request.form['title']
+            description = request.form['description']
+            requirements = request.form.get('requirements', '')
+            responsibilities = request.form.get('responsibilities', '')
+            benefits = request.form.get('benefits', '')
+            salary_range = request.form.get('salary_range', '')
+            location = request.form.get('location', '')
+            job_type = request.form.get('job_type', '')
+            
+            vacancy = int(request.form.get('vacancy') or 1)
+            duration_days = int(request.form.get('duration_days') or 30)
+            deadline_str = request.form.get('deadline')
+            
+            created_by = int(request.form.get('created_by')) 
+            
+            deadline = datetime.strptime(deadline_str, '%Y-%m-%d').date() if deadline_str else None
 
-        new_job = Job(
-            title=title,
-            description=description,
-            requirements=requirements,
-            responsibilities=responsibilities,
-            benefits=benefits,
-            salary_range=salary_range,
-            location=location,
-            job_type=job_type,
-            vacancy=vacancy,
-            created_by=created_by
-        )
+            new_job = Job(
+                title=title,
+                description=description,
+                requirements=requirements,
+                responsibilities=responsibilities,
+                benefits=benefits,
+                salary_range=salary_range,
+                location=location,
+                job_type=job_type,
+                vacancy=vacancy,
+                deadline=deadline,
+                created_by=created_by
+            )
 
-        db.session.add(new_job)
-        db.session.flush()
+            db.session.add(new_job)
+            db.session.flush() 
 
-        expires_at = datetime.utcnow() + timedelta(days=duration_days)
-        job_details = JobPostDetails(
-            job_id=new_job.id,
-            approval_status='Approved',
-            approved_by=current_user.id,
-            approved_at=datetime.utcnow(),
-            duration_days=duration_days,
-            expires_at=expires_at
-        )
-        db.session.add(job_details)
-        db.session.commit()
+            expires_at = datetime.utcnow() + timedelta(days=duration_days) 
+            
+            job_details = JobPostDetails(
+                job_id=new_job.id,
+                approval_status='Pending', 
+                approved_by=current_user.id,
+                approved_at=datetime.utcnow(),
+                duration_days=duration_days,
+                expires_at=expires_at
+            )
+            db.session.add(job_details)
+            db.session.commit()
 
-        flash('Đăng tin tuyển dụng thành công và đã được phê duyệt!', 'success')
-        return redirect(url_for('admin.job_list'))
-
-    return render_template('admin/jobs/create.html')
-
-
+            flash('Đăng tin tuyển dụng thành công và đã được phê duyệt!', 'success')
+            return redirect(url_for('admin.job_list'))
+            
+        except ValueError:
+            flash('Lỗi định dạng dữ liệu đầu vào. Vui lòng kiểm tra lại số lượng tuyển và thời hạn.', 'danger')
+            db.session.rollback()
+        except Exception as e:
+            flash(f'Lỗi khi thêm tin tuyển dụng: {e}', 'danger')
+            db.session.rollback()
+            
+    return render_template('admin/jobs/create.html', users=users_list)
 @admin_bp.route('/jobs/edit/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def job_edit(id):
     job = Job.query.get_or_404(id)
     if request.method == 'POST':
-        job.title = request.form['title']
-        job.description = request.form['description']
-        job.requirements = request.form.get('requirements', '')
-        job.salary_range = request.form.get('salary_range', '')
-        job.location = request.form.get('location', '')
-        
-        if job.details:
-            new_duration = int(request.form.get('duration_days', job.details.duration_days))
-            if new_duration != job.details.duration_days:
-                job.details.duration_days = new_duration
-                job.details.expires_at = datetime.utcnow() + timedelta(days=new_duration)
+        try:
+            job.title = request.form['title']
+            job.description = request.form['description'] 
+            job.responsibilities = request.form.get('responsibilities', '') 
+            job.requirements = request.form.get('requirements', '') 
+            job.benefits = request.form.get('benefits', '')
+            
+            job.salary_range = request.form.get('salary_range', '')
+            job.location = request.form.get('location', '')
+            job.job_type = request.form.get('job_type', '')
+            job.vacancy = int(request.form.get('vacancy', 1))
 
-        db.session.commit()
-        flash('Cập nhật tin tuyển dụng thành công!', 'success')
-        return redirect(url_for('admin.job_list'))
+            # Xử lý Deadline
+            deadline_str = request.form.get('deadline')
+            job.deadline = datetime.strptime(deadline_str, '%Y-%m-%d').date() if deadline_str else None
+            
+            # Xử lý Thời hạn đăng tin
+            if job.details:
+                new_duration = int(request.form.get('duration_days', job.details.duration_days))
+                if new_duration != job.details.duration_days:
+                    job.details.duration_days = new_duration
+                    job.details.expires_at = datetime.utcnow() + timedelta(days=new_duration)
 
+            db.session.commit()
+            flash('Cập nhật tin tuyển dụng thành công!', 'success')
+            return redirect(url_for('admin.job_list'))
+
+        except ValueError:
+             flash('Lỗi định dạng dữ liệu đầu vào. Vui lòng kiểm tra lại số lượng tuyển và thời hạn.', 'danger')
+             db.session.rollback()
+        except Exception as e:
+             flash(f'Lỗi khi cập nhật tin tuyển dụng: {e}', 'danger')
+             db.session.rollback()
+
+    # Truy vấn lại Job sau khi commit hoặc trong GET request
     return render_template('admin/jobs/edit.html', job=job)
-
 
 @admin_bp.route('/jobs/delete/<int:id>', methods=['POST'])
 @admin_required
@@ -319,6 +361,8 @@ def job_active_list():
     return render_template('admin/jobs_post/job_active_list.html', 
                            jobs=active_jobs,
                            today_date=date.today())
+    
+
 
 @admin_bp.route('/jobs/approve/<int:id>', methods=['GET'])
 @admin_required
@@ -342,7 +386,7 @@ def job_approve(id):
     
     db.session.commit()
     flash(f'Tin tuyển dụng "{job.title}" đã được phê duyệt và đăng tải.', 'success')
-    return redirect(url_for('admin.job_list'))
+    return redirect(url_for('admin.job_active_list'))
 
 @admin_bp.route('/jobs/featured')
 @admin_required
@@ -350,7 +394,12 @@ def job_featured_list():
     featured_jobs = db.session.query(Job) \
         .join(JobPostDetails) \
         .filter(JobPostDetails.is_featured == True) \
-        .filter(JobPostDetails.approval_status == 'Approved') \
+        .filter(
+            or_(
+                JobPostDetails.approval_status == 'Approved',
+                JobPostDetails.approval_status == 'Rejected'
+            )
+        ) \
         .filter(JobPostDetails.expires_at > datetime.utcnow()) \
         .all()
         
@@ -415,6 +464,22 @@ def job_soft_delete(id):
     flash(f'Tin tuyển dụng "{job.title}" đã được ẩn hoàn toàn khỏi hệ thống.', 'success')
     
     return redirect(url_for('admin.job_featured_list'))
+
+@admin_bp.route('/jobs/active-delete/<int:id>', methods=['POST'])
+@admin_required
+def job_active_delete(id):
+    job = Job.query.get_or_404(id)
+    
+    if job.details: 
+        job.details.approval_status = 'Pending' 
+        
+        job.details.is_featured = False 
+    
+    db.session.commit()
+    
+    flash(f'Tin tuyển dụng "{job.title}" đã được ẩn hoàn toàn khỏi hệ thống.', 'success')
+    
+    return redirect(url_for('admin.job_active_list'))
 
 @admin_bp.route('/jobs/reject/<int:id>', methods=['GET', 'POST'])
 @admin_required
@@ -507,14 +572,60 @@ def job_edit_approval(id):
             job.details.approved_by = current_user.id
             job.details.approved_at = datetime.utcnow()
             job.details.rejection_reason = reason
-        else:  # Pending
+        else:  
             job.details.approved_by = None
             job.details.approved_at = None
             job.details.rejection_reason = None
 
         db.session.commit()
         flash(f'Tin tuyển dụng "{job.title}" đã được cập nhật trạng thái phê duyệt.', 'success')
-        return redirect(url_for('admin.job_analytics'))
+        return redirect(url_for('admin.job_active_list'))
 
     return render_template('admin/jobs_post/edit_pheduyet.html', job=job)
 
+@admin_bp.route('/template-cv')
+@admin_required
+def template_cv_list():
+    cv_templates = TemplateCV.query.order_by(TemplateCV.id.desc()).all()
+    return render_template(
+        'admin/template_cv/index.html',
+        cv_templates=cv_templates
+    )
+@admin_bp.route('/template-cv/add', methods=['GET', 'POST'])
+@admin_required
+def template_cv_add():
+    if request.method == 'POST':
+        name_cv = request.form.get('name_cv')
+        description = request.form.get('description')
+        category = request.form.get('category')
+
+        thumbnail = request.files.get('thumbnail')
+        file_path = request.files.get('file_path')
+
+        # Upload file nếu có
+        thumbnail_path = None
+        if thumbnail:
+            thumbnail_path = f"uploads/cv_thumbnails/{thumbnail.filename}"
+            thumbnail.save(thumbnail_path)
+
+        file_real_path = None
+        if file_path:
+            file_real_path = f"uploads/cv_files/{file_path.filename}"
+            file_path.save(file_real_path)
+
+        # Lưu DB
+        new_template = TemplateCV(
+            name_cv=name_cv,
+            description=description,
+            category=category,
+            thumbnail=thumbnail_path,
+            file_path=file_real_path,
+            is_active=1
+        )
+        db.session.add(new_template)
+        db.session.commit()
+
+        flash("Thêm mẫu CV thành công!", "success")
+        return redirect(url_for('admin.template_cv_list'))
+
+    return render_template('admin/template_cv/add.html')

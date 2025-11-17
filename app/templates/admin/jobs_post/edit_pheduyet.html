@@ -22,38 +22,8 @@
         </div>
 
         <div class="mb-3">
-            <label>Trách nhiệm</label>
-            <textarea name="responsibilities" class="form-control" rows="2">{{ job.responsibilities }}</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label>Quyền lợi</label>
-            <textarea name="benefits" class="form-control" rows="2">{{ job.benefits }}</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label>Mức lương</label>
-            <input type="text" name="salary_range" class="form-control" value="{{ job.salary_range }}">
-        </div>
-
-        <div class="mb-3">
             <label>Địa điểm</label>
             <input type="text" name="location" class="form-control" value="{{ job.location }}">
-        </div>
-
-        <div class="mb-3">
-            <label>Loại công việc</label>
-            <input type="text" name="job_type" class="form-control" value="{{ job.job_type }}">
-        </div>
-
-        <div class="mb-3">
-            <label>Số lượng tuyển</label>
-            <input type="number" name="vacancy" class="form-control" value="{{ job.vacancy }}">
-        </div>
-
-        <div class="mb-3">
-            <label>Thời gian hiển thị (ngày)</label>
-            <input type="number" name="duration_days" class="form-control" value="{{ job.details.duration_days if job.details else 30 }}">
         </div>
 
         <!-- Phê duyệt -->
@@ -65,12 +35,6 @@
                 <option value="Rejected" {% if job.details and job.details.approval_status == 'Rejected' %}selected{% endif %}>Rejected</option>
             </select>
         </div>
-
-        <div class="mb-3">
-            <label>Lý do từ chối</label>
-            <textarea name="rejection_reason" class="form-control" rows="2">{{ job.details.rejection_reason if job.details and job.details.rejection_reason else '' }}</textarea>
-        </div>
-
         <button type="submit" class="btn btn-success">Cập nhật</button>
         <a href="{{ url_for('admin.job_analytics') }}" class="btn btn-secondary">Quay lại Analytics</a>
     </form>

@@ -4,12 +4,12 @@
     <h1 class="h3 mb-4 text-gray-800">📊 Báo Cáo & Thống Kê Tuyển Dụng</h1>
 
     <div class="row">
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng Số Tin Đã Đăng</div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng Tin Đã Đăng</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.total_jobs }}</div>
                         </div>
                         <div class="col-auto"><i class="fas fa-newspaper fa-2x text-gray-300"></i></div>
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -33,14 +33,28 @@
             </div>
         </div>
 
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tin Nổi Bật Đang Hoạt Động</div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tin Đang Hoạt Động</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.active_count }}</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-check-circle fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tin Nổi Bật</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ data.featured_count }}</div>
-                            <div class="text-xs mt-1"><a href="{{ url_for('admin.job_featured_list') }}">Quản lý tin nổi bật</a></div>
+                            <div class="text-xs mt-1"><a href="{{ url_for('admin.job_featured_list') }}">Quản lý nổi bật</a></div>
                         </div>
                         <div class="col-auto"><i class="fas fa-star fa-2x text-gray-300"></i></div>
                     </div>
@@ -48,8 +62,69 @@
             </div>
         </div>
     </div>
-    <div class="card shadow mb-4">
-        <div class="card-body"><p>Nội dung biểu đồ và thống kê chi tiết...</p></div>
+    
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Tin Đăng Mới (7 Ngày Gần Nhất)</h6></div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="jobChart"></canvas>
+                    </div>
+                    <hr>
+                    <p class="small text-muted">Biểu đồ thể hiện xu hướng đăng tin tuyển dụng trong tuần qua.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">10 Tin Mới Nhất</h6></div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush small">
+                    {% for job in data.jobs %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{{ url_for('admin.job_view', id=job.id) }}" class="text-truncate" style="max-width: 70%;">
+                                {{ job.title }}
+                            </a>
+                            <span class="text-muted">{{ job.created_at.strftime('%d/%m/%Y') }}</span>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-center text-muted">Chưa có tin đăng nào.</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var chartLabels = {{ data.chart_labels | tojson }};
+    var chartData = {{ data.chart_data | tojson }};
+
+    var ctx = document.getElementById("jobChart");
+    if (ctx) { 
+        var jobChart = new Chart(ctx, {
+            type: 'line', 
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: "Số lượng tin",
+                    data: chartData,
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                maintainAspectRatio: false, 
+                responsive: true,
+            }
+        });
+    }
+</script>
 {% endblock %}

@@ -1,5 +1,6 @@
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
+    <!-- Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('admin.admin_dashboard') }}">
         <div class="sidebar-brand-icon rotate-n-15">
             <i class="fas fa-briefcase"></i>
@@ -9,6 +10,7 @@
 
     <hr class="sidebar-divider my-0">
 
+    <!-- Dashboard -->
     <li class="nav-item {% if request.path.rstrip('/') == url_for('admin.admin_dashboard').rstrip('/') %}active{% endif %}">
         <a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">
             <i class="fas fa-fw fa-tachometer-alt"></i>
@@ -18,11 +20,12 @@
 
     <hr class="sidebar-divider">
 
-    <div class="sidebar-heading">
-        Quản lý chung
-    </div>
+    <!-- Quản lý chung -->
+    <div class="sidebar-heading">Quản lý chung</div>
 
-    {% set user_active = request.path.startswith(url_for('admin.user_list')[:-1]) or request.path.startswith(url_for('admin.user_add')[:-1]) %}
+    {# Tài khoản #}
+    {% set user_active = request.path.startswith(url_for('admin.user_list')[:-1]) 
+                         or request.path.startswith(url_for('admin.user_add')[:-1]) %}
     <li class="nav-item {% if user_active %}active{% endif %}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsers"
            aria-expanded="{{ 'true' if user_active else 'false' }}" aria-controls="collapseUsers">
@@ -31,13 +34,17 @@
         </a>
         <div id="collapseUsers" class="collapse {% if user_active %}show{% endif %}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {% if request.path == url_for('admin.user_list') %}active{% endif %}" href="{{ url_for('admin.user_list') }}">Danh sách</a>
-                <a class="collapse-item {% if request.path == url_for('admin.user_add') %}active{% endif %}" href="{{ url_for('admin.user_add') }}">Thêm mới</a>
+                <a class="collapse-item {% if request.path == url_for('admin.user_list') %}active{% endif %}"
+                   href="{{ url_for('admin.user_list') }}">Danh sách</a>
+                <a class="collapse-item {% if request.path == url_for('admin.user_add') %}active{% endif %}"
+                   href="{{ url_for('admin.user_add') }}">Thêm mới</a>
             </div>
         </div>
     </li>
 
-    {% set recruiter_active = request.path.startswith(url_for('admin.recruiter_list')[:-1]) or request.path.startswith(url_for('admin.recruiter_add')[:-1]) %}
+    {# Cộng tác viên #}
+    {% set recruiter_active = request.path.startswith(url_for('admin.recruiter_list')[:-1]) 
+                              or request.path.startswith(url_for('admin.recruiter_add')[:-1]) %}
     <li class="nav-item {% if recruiter_active %}active{% endif %}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRecruiters"
            aria-expanded="{{ 'true' if recruiter_active else 'false' }}" aria-controls="collapseRecruiters">
@@ -46,26 +53,36 @@
         </a>
         <div id="collapseRecruiters" class="collapse {% if recruiter_active %}show{% endif %}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {% if request.path == url_for('admin.recruiter_list') %}active{% endif %}" href="{{ url_for('admin.recruiter_list') }}">Danh sách</a>
-                <a class="collapse-item {% if request.path == url_for('admin.recruiter_add') %}active{% endif %}" href="{{ url_for('admin.recruiter_add') }}">Thêm mới</a>
+                <a class="collapse-item {% if request.path == url_for('admin.recruiter_list') %}active{% endif %}"
+                   href="{{ url_for('admin.recruiter_list') }}">Danh sách</a>
+                <a class="collapse-item {% if request.path == url_for('admin.recruiter_add') %}active{% endif %}"
+                   href="{{ url_for('admin.recruiter_add') }}">Thêm mới</a>
             </div>
         </div>
     </li>
 
     <hr class="sidebar-divider">
 
-    <div class="sidebar-heading">
-        Quản lý Tuyển dụng
-    </div>
+    <!-- Quản lý Tuyển dụng -->
+    <div class="sidebar-heading">Quản lý Tuyển dụng</div>
 
-    {# -------------------------------------------------------------------------------------------------------------------------------- #}
-    {% set advanced_job_routes = [url_for('admin.job_pending_list'), url_for('admin.job_featured_list'), url_for('admin.job_analytics')] %}
-    {% set post_management_active = request.path in advanced_job_routes or 'jobs/pending' in request.path or 'jobs/featured' in request.path or 'jobs/analytics' in request.path or 'jobs/reject' in request.path %}
-    
-    {# BƯỚC SỬA LỖI QUAN TRỌNG: Thêm điều kiện LOẠI TRỪ nếu đang ở các trang quản lý tối ưu #}
-    {% set is_job_list_or_add = request.path.startswith(url_for('admin.job_list')[:-1]) or request.path.startswith(url_for('admin.job_add')[:-1]) or 'jobs/edit' in request.path %}
+    {# Tin tuyển dụng #}
+    {% set advanced_job_routes = [
+        url_for('admin.job_pending_list'), 
+        url_for('admin.job_featured_list'), 
+        url_for('admin.job_analytics')
+    ] %}
+    {% set post_management_active = request.path in advanced_job_routes 
+        or 'jobs/pending' in request.path 
+        or 'jobs/featured' in request.path 
+        or 'jobs/analytics' in request.path 
+        or 'jobs/reject' in request.path %}
+
+    {% set is_job_list_or_add = request.path.startswith(url_for('admin.job_list')[:-1]) 
+        or request.path.startswith(url_for('admin.job_add')[:-1]) 
+        or 'jobs/edit' in request.path %}
     {% set job_active = is_job_list_or_add and not post_management_active %}
-    
+
     <li class="nav-item {% if job_active %}active{% endif %}">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseJobs"
            aria-expanded="{{ 'true' if job_active else 'false' }}" aria-controls="collapseJobs">
@@ -74,8 +91,10 @@
         </a>
         <div id="collapseJobs" class="collapse {% if job_active %}show{% endif %}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {% if request.path == url_for('admin.job_list') %}active{% endif %}" href="{{ url_for('admin.job_list') }}">Danh sách</a>
-                <a class="collapse-item {% if request.path == url_for('admin.job_add') %}active{% endif %}" href="{{ url_for('admin.job_add') }}">Thêm mới</a>
+                <a class="collapse-item {% if request.path == url_for('admin.job_list') %}active{% endif %}"
+                   href="{{ url_for('admin.job_list') }}">Danh sách</a>
+                <a class="collapse-item {% if request.path == url_for('admin.job_add') %}active{% endif %}"
+                   href="{{ url_for('admin.job_add') }}">Thêm mới</a>
             </div>
         </div>
     </li>
@@ -88,22 +107,53 @@
         </a>
         <div id="collapsePostManagement" class="collapse {% if post_management_active %}show{% endif %}" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item {% if 'jobs/pending' in request.path %}active{% endif %}" href="{{ url_for('admin.job_active_list') }}">
+                <a class="collapse-item {% if 'jobs/pending' in request.path %}active{% endif %}"
+                   href="{{ url_for('admin.job_active_list') }}">
                     <i class="fas fa-hourglass-half"></i> Chờ phê duyệt
                 </a>
-                <a class="collapse-item {% if 'jobs/featured' in request.path %}active{% endif %}" href="{{ url_for('admin.job_featured_list') }}">
+                <a class="collapse-item {% if 'jobs/featured' in request.path %}active{% endif %}"
+                   href="{{ url_for('admin.job_featured_list') }}">
                     <i class="fas fa-star"></i> Tin Nổi Bật
                 </a>
-                <a class="collapse-item {% if 'jobs/analytics' in request.path %}active{% endif %}" href="{{ url_for('admin.job_analytics') }}">
+                <a class="collapse-item {% if 'jobs/analytics' in request.path %}active{% endif %}"
+                   href="{{ url_for('admin.job_analytics') }}">
                     <i class="fas fa-chart-line"></i> Báo cáo
                 </a>
             </div>
         </div>
     </li>
-    {# -------------------------------------------------------------------------------------------------------------------------------- #}
+
+    <hr class="sidebar-divider">
+
+    <!-- Quản lý Hồ sơ -->
+    <div class="sidebar-heading">Quản lý Hồ sơ</div>
+
+    {# CV Mẫu #}
+    {% set template_cv_active = 
+        request.path.startswith(url_for('admin.template_cv_list')[:-1]) 
+        or request.path.startswith(url_for('admin.template_cv_add')[:-1]) 
+        or 'template-cv/edit' in request.path 
+    %}
+    <li class="nav-item {% if template_cv_active %}active{% endif %}">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTemplateCv"
+           aria-expanded="{{ 'true' if template_cv_active else 'false' }}" aria-controls="collapseTemplateCv">
+            <i class="fas fa-file-alt"></i>
+            <span>CV Mẫu</span>
+        </a>
+        <div id="collapseTemplateCv" class="collapse {% if template_cv_active %}show{% endif %}" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item {% if request.path == url_for('admin.template_cv_list') %}active{% endif %}"
+                   href="{{ url_for('admin.template_cv_list') }}">Danh sách</a>
+
+                <a class="collapse-item {% if request.path == url_for('admin.template_cv_add') %}active{% endif %}"
+                   href="{{ url_for('admin.template_cv_add') }}">Thêm mới</a>
+            </div>
+        </div>
+    </li>
 
     <hr class="sidebar-divider d-none d-md-block">
 
+    <!-- Toggle Sidebar -->
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>

@@ -3,6 +3,7 @@
 <div class="container-fluid">
     <h1 class="h3 mb-2 text-gray-800">✅ Danh Sách Tin Tuyển Dụng Đang Hoạt Động</h1>
     <p class="mb-4">Tổng hợp các tin đã được phê duyệt và còn hiệu lực. Bạn có thể quản lý, sửa đổi hoặc ẩn (xóa mềm) các tin này.</p>
+
     <div class="row mb-3">
         <div class="col text-right">
             <a href="{{ url_for('admin.job_pending_list') }}" class="btn btn-primary btn-icon-split">
@@ -61,7 +62,7 @@
                                 <a href="{{ url_for('admin.job_feature', id=job.id) }}" class="btn {% if job.details.is_featured %}btn-secondary{% else %}btn-primary{% endif %} btn-sm" title="Ghim/Bỏ ghim nổi bật">
                                     <i class="fas fa-thumbtack"></i> 
                                 </a>
-                                <form action="{{ url_for('admin.job_soft_delete', id=job.id) }}" method="POST" style="display:inline-block;">
+                                <form action="{{ url_for('admin.job_active_delete', id=job.id) }}" method="POST" style="display:inline-block;">
                                     <button type="submit" class="btn btn-danger btn-sm" title="Ẩn tin/Xóa mềm"
                                             onclick="return confirm('Bạn có chắc muốn ẩn tin tuyển dụng này khỏi hệ thống không?')">
                                         <i class="fas fa-trash"></i>

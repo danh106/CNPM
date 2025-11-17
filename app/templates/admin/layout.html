@@ -15,7 +15,7 @@
             object-fit: cover;  
             object-position: center;
     }
-</style>
+    </style>
 
 </head>
 <body id="page-top">
@@ -50,7 +50,7 @@
                                             src="{{ current_user.avatar_url }}">
                                     {% else %}
                                         <img class="img-profile rounded-circle"
-                                            src="{{ url_for('static', filename='images/default-avatar.png') }}">
+                                            src="{{ url_for('static', filename='uploads/large_img.webp') }}">
                                     {% endif %}
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -103,5 +103,7 @@
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+</body> 
 </html>

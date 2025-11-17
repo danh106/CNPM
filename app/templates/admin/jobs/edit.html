@@ -1,32 +1,149 @@
 {% extends "admin/layout.html" %}
+
 {% block content %}
-<h1>Sửa tin tuyển dụng</h1>
-<form method="POST">
-    <div class="mb-3">
-        <label>Tiêu đề</label>
-        <input type="text" name="title" class="form-control" value="{{ job.title }}" required>
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">✍️ Sửa Tin Tuyển Dụng: {{ job.title }}</h1>
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="POST" id="jobForm">
+                
+                <div class="mb-3">
+                    <label for="title"><strong>Tiêu đề vị trí</strong> <span class="text-danger">*</span></label>
+                    <input type="text" id="title" name="title" class="form-control" value="{{ job.title }}" required placeholder="Ví dụ: Lập trình viên Backend (Python/Django)">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="salary_range">Mức lương dự kiến</label>
+                        <input type="text" id="salary_range" name="salary_range" class="form-control" value="{{ job.salary_range }}" placeholder="Ví dụ: 15 - 25 Triệu VND">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="location">Địa điểm làm việc</label>
+                        <input type="text" id="location" name="location" class="form-control" value="{{ job.location }}" placeholder="Ví dụ: Quận 1, TP. Hồ Chí Minh">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="job_type">Loại hình công việc</label>
+                        <input type="text" id="job_type" name="job_type" class="form-control" value="{{ job.job_type or '' }}" placeholder="Ví dụ: Full-time">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="vacancy">Số lượng tuyển</label>
+                        <input type="number" id="vacancy" name="vacancy" class="form-control" min="1" value="{{ job.vacancy or 1 }}" placeholder="1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="deadline">Hạn nộp hồ sơ</label>
+                        <input type="date" id="deadline" name="deadline" class="form-control" value="{{ job.deadline.strftime('%Y-%m-%d') if job.deadline else '' }}">
+                    </div>
+                </div>
+                
+                <hr>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="description"><strong>Mô tả công việc</strong> <span class="text-danger">*</span></label>
+                            <textarea id="description" name="description_editor" class="form-control" rows="8" required placeholder="Chi tiết công việc và môi trường làm việc...">{{ job.description }}</textarea>
+                            
+                            <textarea class="d-none" name="description" id="te1"></textarea> 
+                        </div>
+                        <div class="mb-3">
+                            <label for="responsibilities">Trách nhiệm chính</label>
+                            <textarea id="responsibilities" name="responsibilities_editor" class="form-control" rows="4" placeholder="Liệt kê các đầu việc chính (mỗi mục một dòng)...">{{ job.responsibilities or '' }}</textarea>
+                            <textarea class="d-none" name="responsibilities" id="te2"></textarea> 
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="requirements">Yêu cầu ứng viên</label>
+                            <textarea id="requirements" name="requirements_editor" class="form-control" rows="4" placeholder="Kỹ năng, kinh nghiệm bắt buộc...">{{ job.requirements or '' }}</textarea>
+                            <textarea class="d-none" name="requirements" id="te3"></textarea> 
+                        </div>
+                        <div class="mb-3">
+                            <label for="benefits">Phúc lợi / Quyền lợi</label>
+                            <textarea id="benefits" name="benefits_editor" class="form-control" rows="4" placeholder="Lương tháng 13, bảo hiểm, du lịch...">{{ job.benefits or '' }}</textarea>
+                            <textarea class="d-none" name="benefits" id="te4"></textarea> 
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="duration_days">Thời hạn đăng tin (Ngày)</label>
+                        <input type="number" id="duration_days" name="duration_days" class="form-control" min="1" value="{{ job.details.duration_days if job.details else 30 }}">
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-2 border-top">
+                    <button type="button" class="btn btn-success btn-lg" onclick="onsubmitForm()">💾 Cập Nhật Tin Tuyển Dụng</button>
+                    <a href="{{ url_for('admin.job_list') }}" class="btn btn-secondary btn-lg ml-2">Hủy Bỏ</a>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="mb-3">
-        <label>Mô tả công việc</label>
-        <textarea name="description" class="form-control" rows="4" required>{{ job.description }}</textarea>
-    </div>
-    <div class="mb-3">
-        <label>Yêu cầu ứng viên</label>
-        <textarea name="requirements" class="form-control" rows="3">{{ job.requirements }}</textarea>
-    </div>
-    <div class="mb-3">
-        <label>Mức lương</label>
-        <input type="text" name="salary_range" class="form-control" value="{{ job.salary_range }}">
-    </div>
-    <div class="mb-3">
-        <label>Địa điểm</label>
-        <input type="text" name="location" class="form-control" value="{{ job.location }}">
-    </div>
-    <div class="mb-3">
-        <label>Hạn nộp hồ sơ</label>
-        <input type="date" name="deadline" class="form-control" value="{{ job.deadline }}">
-    </div>
-    <button type="submit" class="btn btn-success">Cập nhật</button>
-    <a href="{{ url_for('admin.job_list') }}" class="btn btn-secondary">Hủy</a>
-</form>
+</div>
+
+<script src="https://cdn.ckeditor.com/ckeditor5/41.2.1/classic/ckeditor.js"></script>
+<script>
+    const editors = {}; 
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // NOTE: Đảm bảo ID trong mảng này khớp với ID của các textarea (description, responsibilities, ...)
+        const editorFields = ['#description', '#responsibilities', '#requirements', '#benefits'];
+
+        editorFields.forEach(id => {
+            const element = document.querySelector(id);
+            if (element) {
+                ClassicEditor.create(element)
+                    .then(editor => {
+                        const fieldName = id.substring(1); 
+                        editors[fieldName] = editor; 
+                        console.log(`CKEditor cho ${fieldName} đã sẵn sàng.`);
+                    })
+                    .catch(error => console.error('Lỗi khởi tạo CKEditor:', id, error));
+            } else {
+                console.warn('Không tìm thấy phần tử cho CKEditor:', id);
+            }
+        });
+    });
+    
+    // Hàm lấy nội dung HTML
+    function getEditorContent(fieldName) {
+        if (editors[fieldName]) {
+            return editors[fieldName].getData(); 
+        }
+        return null;
+    }
+
+    // Hàm xử lý sự kiện submit form
+    function onsubmitForm() {
+        // 1. Lấy dữ liệu HTML từ CKEditor
+        const descriptionHTML = getEditorContent('description');
+        const responsibilitiesHTML = getEditorContent('responsibilities');
+        const requirementsHTML = getEditorContent('requirements');
+        const benefitsHTML = getEditorContent('benefits');
+
+        // 2. Đồng bộ dữ liệu vào các trường ẩn (có thuộc tính name)
+        // Dùng || '' để đảm bảo không bị lỗi nếu nội dung là null/undefined
+        document.getElementById('te1').value = descriptionHTML || '';
+        document.getElementById('te2').value = responsibilitiesHTML || '';
+        document.getElementById('te3').value = requirementsHTML || '';
+        document.getElementById('te4').value = benefitsHTML || '';
+        
+        // 3. Đảm bảo Mô tả công việc không trống trước khi gửi
+        if (!descriptionHTML || descriptionHTML.trim() === '' || descriptionHTML.trim() === '<p></p>') {
+            alert('Vui lòng nhập Mô tả công việc.');
+            return; 
+        }
+
+        // 4. Gửi form
+        document.getElementById('jobForm').submit();
+    }
+</script>
+
 {% endblock %}

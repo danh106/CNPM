@@ -103,20 +103,16 @@ def applicant_profile(user_id):
         return redirect(url_for('main.index'))
 
     user = User.query.get(user_id)
-    user_images = UserImages.query.filter_by(user_id=user_id).order_by(UserImages.uploaded_at.desc()).all()
-    avatar_url = user_images[0].image_url if user_images else url_for('static', filename='img/default-avatar.png')
+    avatar_url = user.avatar_url if user and user.avatar_url else url_for('static', filename='img/default-avatar.png')
 
     if request.method == 'POST':
-        # ✅ Cập nhật thông tin ứng viên
         applicant.phone_number = request.form.get('phone_number', applicant.phone_number)
         applicant.position_applied = request.form.get('position_applied', applicant.position_applied)
 
-        # ✅ Cập nhật email (bảng User)
         new_email = request.form.get('email')
         if new_email and new_email != user.email:
             user.email = new_email
 
-        # ✅ Xử lý file CV
         cv_file = request.files.get('cv_file')
         if cv_file and cv_file.filename:
             cv_filename = secure_filename(cv_file.filename)
@@ -125,22 +121,21 @@ def applicant_profile(user_id):
             cv_file.save(cv_path)
             applicant.resume_url = url_for('static', filename=f'uploads/cv/{cv_filename}')
 
-        # ✅ Ảnh đại diện
         avatar_file = request.files.get('avatar_file')
         if avatar_file and avatar_file.filename:
             avatar_filename = secure_filename(avatar_file.filename)
-            avatar_path = os.path.join(current_app.root_path, 'static/uploads/avatar', avatar_filename)
+            avatar_path = os.path.join(current_app.root_path, 'static/uploads/avatars', avatar_filename)
             os.makedirs(os.path.dirname(avatar_path), exist_ok=True)
             avatar_file.save(avatar_path)
-
-            new_image = UserImages(
-                user_id=user_id,
-                image_url=url_for('static', filename=f'uploads/avatar/{avatar_filename}')
-            )
-            db.session.add(new_image)
-            db.session.flush()
-            applicant.avatar_image_id = new_image.id
-            avatar_url = new_image.image_url
+            user.avatar_url = url_for('static', filename=f'uploads/avatars/{avatar_filename}')
+            # new_image = UserImages(
+            #     user_id=user_id,
+            #     image_url=url_for('static', filename=f'uploads/avatars/{avatar_filename}')
+            # )
+            # db.session.add(new_image)
+            # db.session.flush()
+            # applicant.avatar_image_id = new_image.id
+            # avatar_url = new_image.image_url
 
         db.session.commit()
         flash('Cập nhật hồ sơ thành công!', 'success')

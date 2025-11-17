@@ -16,16 +16,13 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Quan hệ
     activity_logs = db.relationship('ActivityLog', back_populates='user', cascade="all, delete-orphan")
     applicant = db.relationship('Applicant', back_populates='user', uselist=False, cascade="all, delete-orphan")
     images = db.relationship('UserImages', back_populates='user', cascade="all, delete-orphan")
     two_factor = db.relationship('TwoFactorAuth', back_populates='user', uselist=False, cascade="all, delete-orphan")
 
-    # Người tạo job (recruiter)
     jobs_posted = db.relationship('Job', back_populates='created_by_user', cascade="all, delete-orphan")
 
-    # Ứng viên nộp đơn (applicant)
     applications = db.relationship('Application', back_populates='user', cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -159,3 +156,27 @@ class JobPostDetails(db.Model):
 
     def __repr__(self):
         return f"<JobDetails JobID={self.job_id}, Status={self.approval_status}>"
+
+class TemplateCV(db.Model):
+    __tablename__ = "template_cv"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name_cv = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    category = db.Column(db.String(100))
+    thumbnail = db.Column(db.String(255))
+    file_path = db.Column(db.String(255))
+    is_active = db.Column(db.Integer, default=1)   
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    def __repr__(self):
+        return f"<TemplateCV {self.name_cv}>"
