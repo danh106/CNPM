@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, Response, jsonify
 from flask_login import login_required, current_user 
-from app.models import User, Job, JobPostDetails
+from app.models import User, Job, JobPostDetails, TemplateCV
 from werkzeug.security import generate_password_hash
 from app import db 
 import os
@@ -591,41 +591,46 @@ def template_cv_list():
         'admin/template_cv/index.html',
         cv_templates=cv_templates
     )
+
+
+@admin_bp.route('/template-cv/<int:id>/preview')
+@admin_required
+def preview_template_cv(id):
+    cv = TemplateCV.query.get_or_404(id)
+    return render_template('admin/template_cv/preview.html', cv=cv)
+
 @admin_bp.route('/template-cv/add', methods=['GET', 'POST'])
 @admin_required
-def template_cv_add():
+def add_template_cv():
     if request.method == 'POST':
-        name_cv = request.form.get('name_cv')
+        name = request.form['name']
         description = request.form.get('description')
-        category = request.form.get('category')
-
-        thumbnail = request.files.get('thumbnail')
-        file_path = request.files.get('file_path')
-
-        # Upload file nếu có
-        thumbnail_path = None
-        if thumbnail:
-            thumbnail_path = f"uploads/cv_thumbnails/{thumbnail.filename}"
-            thumbnail.save(thumbnail_path)
-
-        file_real_path = None
-        if file_path:
-            file_real_path = f"uploads/cv_files/{file_path.filename}"
-            file_path.save(file_real_path)
-
-        # Lưu DB
-        new_template = TemplateCV(
-            name_cv=name_cv,
-            description=description,
-            category=category,
-            thumbnail=thumbnail_path,
-            file_path=file_real_path,
-            is_active=1
-        )
-        db.session.add(new_template)
+        thumbnail_url = request.form.get('thumbnail_url')
+        cv = TemplateCV(name=name, description=description, thumbnail_url=thumbnail_url)
+        db.session.add(cv)
         db.session.commit()
-
-        flash("Thêm mẫu CV thành công!", "success")
+        flash('Thêm CV mẫu thành công!', 'success')
         return redirect(url_for('admin.template_cv_list'))
-
     return render_template('admin/template_cv/add.html')
+
+@admin_bp.route('/template-cv/<int:id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_template_cv(id):
+    cv = TemplateCV.query.get_or_404(id)
+    if request.method == 'POST':
+        cv.name = request.form['name']
+        cv.description = request.form.get('description')
+        cv.thumbnail_url = request.form.get('thumbnail_url')
+        db.session.commit()
+        flash('Cập nhật CV mẫu thành công!', 'success')
+        return redirect(url_for('admin.template_cv_list'))
+    return render_template('admin/template_cv/edit.html', cv=cv)
+
+@admin_bp.route('/template-cv/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_template_cv(id):
+    cv = TemplateCV.query.get_or_404(id)
+    db.session.delete(cv)
+    db.session.commit()
+    flash('Xoá CV mẫu thành công!', 'success')
+    return redirect(url_for('admin.template_cv_list'))

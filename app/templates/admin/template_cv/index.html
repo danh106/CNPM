@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">⭐ Danh Sách CV Mẫu</h1>
+    <p class="mb-4">Quản lý các mẫu CV có sẵn cho người dùng.</p>
+
+    <!-- Nút Thêm CV -->
+    <div class="mb-3">
+        <a href="{{ url_for('admin.add_template_cv') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Thêm CV mới
+        </a>
+    </div>
+
+    <div class="row">
+        {% for cv in cv_templates %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <!-- Thumbnail -->
+                {% if cv.thumbnail_url %}
+                <img src="{{ cv.thumbnail_url }}" class="card-img-top" alt="{{ cv.name }}">
+                {% else %}
+                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                    Không có hình
+                </div>
+                {% endif %}
+
+                <!-- Card body -->
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ cv.name }}</h5>
+                    <p class="card-text text-truncate">{{ cv.description or "Không có mô tả" }}</p>
+                    <p class="text-muted small mb-2">
+                        Ngày tạo: {{ cv.created_at.strftime('%d/%m/%Y') if cv.created_at else 'N/A' }}
+                    </p>
+
+                    <!-- Hành động -->
+                    <div class="mt-auto">
+                        <a href="{{ url_for('admin.preview_template_cv', id=cv.id) }}" class="btn btn-info btn-sm me-1" title="Xem">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('admin.edit_template_cv', id=cv.id) }}" class="btn btn-warning btn-sm me-1" title="Sửa">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('admin.delete_template_cv', id=cv.id) }}" method="POST" style="display:inline-block;">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Xóa"
+                                    onclick="return confirm('Bạn có chắc muốn xóa mẫu CV này không?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center">
+            <p>Hiện không có mẫu CV nào.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
