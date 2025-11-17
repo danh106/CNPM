@@ -583,15 +583,16 @@ def job_edit_approval(id):
 
     return render_template('admin/jobs_post/edit_pheduyet.html', job=job)
 
+
+
+
+
+
 @admin_bp.route('/template-cv')
 @admin_required
 def template_cv_list():
     cv_templates = TemplateCV.query.order_by(TemplateCV.id.desc()).all()
-    return render_template(
-        'admin/template_cv/index.html',
-        cv_templates=cv_templates
-    )
-
+    return render_template('admin/template_cv/index.html', cv_templates=cv_templates)
 
 @admin_bp.route('/template-cv/<int:id>/preview')
 @admin_required
@@ -603,14 +604,42 @@ def preview_template_cv(id):
 @admin_required
 def add_template_cv():
     if request.method == 'POST':
-        name = request.form['name']
+        name_cv = request.form['name']
         description = request.form.get('description')
-        thumbnail_url = request.form.get('thumbnail_url')
-        cv = TemplateCV(name=name, description=description, thumbnail_url=thumbnail_url)
-        db.session.add(cv)
+        category = request.form.get('category')
+        is_active = 1 if request.form.get('is_active') == 'on' else 0
+
+        thumbnail_file = request.files.get('thumbnail')
+        thumbnail_url = None
+        if thumbnail_file and allowed_file(thumbnail_file.filename):
+            filename = secure_filename(thumbnail_file.filename)
+            save_path = os.path.join(current_app.config['CV_THUMBNAIL_FOLDER'], filename)
+            thumbnail_file.save(save_path)
+            thumbnail_url = f"/static/uploads/cv_thumbnail/{filename}"
+
+        cv_file = request.files.get('file_path')
+        cv_url = None
+        if cv_file and cv_file.filename != "":
+            filename = secure_filename(cv_file.filename)
+            save_path = os.path.join(current_app.config['CV_FILE_FOLDER'], filename)
+            cv_file.save(save_path)
+            cv_url = f"/static/uploads/cv_file/{filename}"
+
+        new_cv = TemplateCV(
+            name_cv = name_cv,
+            description=description,
+            category=category,
+            thumbnail=thumbnail_url,
+            file_path=cv_url,
+            is_active=is_active
+        )
+
+        db.session.add(new_cv)
         db.session.commit()
+
         flash('Thêm CV mẫu thành công!', 'success')
         return redirect(url_for('admin.template_cv_list'))
+
     return render_template('admin/template_cv/add.html')
 
 @admin_bp.route('/template-cv/<int:id>/edit', methods=['GET', 'POST'])
@@ -620,10 +649,27 @@ def edit_template_cv(id):
     if request.method == 'POST':
         cv.name = request.form['name']
         cv.description = request.form.get('description')
-        cv.thumbnail_url = request.form.get('thumbnail_url')
+        cv.category = request.form.get('category')
+        cv.is_active = 1 if request.form.get('is_active') == 'on' else 0
+
+        thumbnail_file = request.files.get('thumbnail')
+        if thumbnail_file and allowed_file(thumbnail_file.filename):
+            filename = secure_filename(thumbnail_file.filename)
+            save_path = os.path.join(current_app.config['CV_THUMBNAIL_FOLDER'], filename)
+            thumbnail_file.save(save_path)
+            cv.thumbnail_url = f"/static/uploads/cv_thumbnail/{filename}"
+
+        cv_file = request.files.get('file_path')
+        if cv_file and cv_file.filename != "":
+            filename = secure_filename(cv_file.filename)
+            save_path = os.path.join(current_app.config['CV_FILE_FOLDER'], filename)
+            cv_file.save(save_path)
+            cv.file_path = f"/static/uploads/cv_file/{filename}"
+
         db.session.commit()
         flash('Cập nhật CV mẫu thành công!', 'success')
         return redirect(url_for('admin.template_cv_list'))
+
     return render_template('admin/template_cv/edit.html', cv=cv)
 
 @admin_bp.route('/template-cv/<int:id>/delete', methods=['POST'])

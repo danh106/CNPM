@@ -1,0 +1,43 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Thêm CV Mẫu{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Thêm CV Mẫu</h2>
+    <form action="{{ url_for('admin.add_template_cv') }}" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="name_cv" class="form-label">Tên CV <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="name_cv" name="name" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Mô tả</label>
+            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="category" class="form-label">Danh mục</label>
+            <input type="text" class="form-control" id="category" name="category">
+        </div>
+
+        <div class="mb-3">
+            <label for="thumbnail" class="form-label">Ảnh đại diện (thumbnail)</label>
+            <input type="file" class="form-control" id="thumbnail" name="thumbnail" accept="image/*">
+        </div>
+
+        <div class="mb-3">
+            <label for="file_path" class="form-label">File CV (PDF/Word)</label>
+            <input type="file" class="form-control" id="file_path" name="file_path" accept=".pdf,.doc,.docx">
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+            <label class="form-check-label" for="is_active">Hiển thị CV mẫu</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Thêm CV Mẫu</button>
+        <a href="{{ url_for('admin.template_cv_list') }}" class="btn btn-secondary">Hủy</a>
+    </form>
+</div>
+{% endblock %}
