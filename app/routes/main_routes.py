@@ -128,15 +128,6 @@ def applicant_profile(user_id):
             os.makedirs(os.path.dirname(avatar_path), exist_ok=True)
             avatar_file.save(avatar_path)
             user.avatar_url = url_for('static', filename=f'uploads/avatars/{avatar_filename}')
-            # new_image = UserImages(
-            #     user_id=user_id,
-            #     image_url=url_for('static', filename=f'uploads/avatars/{avatar_filename}')
-            # )
-            # db.session.add(new_image)
-            # db.session.flush()
-            # applicant.avatar_image_id = new_image.id
-            # avatar_url = new_image.image_url
-
         db.session.commit()
         flash('Cập nhật hồ sơ thành công!', 'success')
         return redirect(url_for('main.applicant_profile', user_id=user_id))
@@ -158,7 +149,6 @@ def job_details(job_id):
 def apply_job(job_id):
     job = Job.query.get_or_404(job_id)
 
-    # Kiểm tra nếu đã nộp trước đó
     existing = Application.query.filter_by(user_id=current_user.id, job_id=job.id).first()
     if existing:
         flash('Bạn đã nộp hồ sơ cho công việc này rồi.', 'warning')
@@ -199,7 +189,6 @@ def forgot_password():
         if user:
             token = serializer.dumps(user.email)
             reset_url = url_for('main.reset_password', token=token, _external=True)
-            # Gửi email reset_url cho user ở đây
             flash('Một liên kết đặt lại mật khẩu đã được gửi đến email của bạn.', 'info')
         else:
             flash('Email không tồn tại trong hệ thống.', 'danger')
