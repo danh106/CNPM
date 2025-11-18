@@ -592,7 +592,6 @@ def template_cv_list():
         cv_templates=cv_templates
     )
 
-
 @admin_bp.route('/template-cv/<int:id>/preview')
 @admin_required
 def preview_template_cv(id):
@@ -606,10 +605,6 @@ ALLOWED_CV_FILES = {'pdf', 'doc', 'docx'}
 
 # Hàm kiểm tra file hợp lệ
 def allowed_files(filename, allowed_exts):
-    """
-    filename: tên file upload
-    allowed_exts: tập hợp các đuôi cho phép, ví dụ {'png','jpg'}
-    """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_exts
 
 
@@ -675,16 +670,13 @@ def edit_template_cv(id):
         description = request.form.get('description')
         file = request.files.get('thumbnail_file')
 
-        # Kiểm tra rỗng
         if not name_cv or not description:
             flash("Tên và mô tả không được để trống!", "danger")
             return redirect(request.url)
 
-        # Cập nhật text fields
         cv.name_cv = name_cv
         cv.description = description
 
-        # Xử lý file
         if file and file.filename:
             if allowed_file(file.filename):
                 filename = secure_filename(file.filename)
@@ -697,7 +689,6 @@ def edit_template_cv(id):
                 flash("File không hợp lệ! Chỉ cho phép png, jpg, jpeg.", "danger")
                 return redirect(request.url)
 
-        # Kiểm tra có thay đổi hay không
         if (
             cv.name_cv == old_name and
             cv.description == old_description and
