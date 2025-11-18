@@ -583,16 +583,14 @@ def job_edit_approval(id):
 
     return render_template('admin/jobs_post/edit_pheduyet.html', job=job)
 
-
-
-
-
-
 @admin_bp.route('/template-cv')
 @admin_required
 def template_cv_list():
     cv_templates = TemplateCV.query.order_by(TemplateCV.id.desc()).all()
-    return render_template('admin/template_cv/index.html', cv_templates=cv_templates)
+    return render_template(
+        'admin/template_cv/index.html',
+        cv_templates=cv_templates
+    )
 
 @admin_bp.route('/template-cv/<int:id>/preview')
 @admin_required
@@ -600,43 +598,59 @@ def preview_template_cv(id):
     cv = TemplateCV.query.get_or_404(id)
     return render_template('admin/template_cv/preview.html', cv=cv)
 
+THUMBNAIL_FOLDER = 'static/uploads/avatar_cv'
+CV_FILE_FOLDER = 'static/uploads/cv_file'
+ALLOWED_THUMBNAILS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_CV_FILES = {'pdf', 'doc', 'docx'}
+
+# Hàm kiểm tra file hợp lệ
+def allowed_files(filename, allowed_exts):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_exts
+
+
 @admin_bp.route('/template-cv/add', methods=['GET', 'POST'])
 @admin_required
 def add_template_cv():
     if request.method == 'POST':
-        name_cv = request.form['name']
+        # Lấy dữ liệu từ form
+        name_cv = request.form.get('name')
         description = request.form.get('description')
         category = request.form.get('category')
         is_active = 1 if request.form.get('is_active') == 'on' else 0
 
+        # Xử lý thumbnail
         thumbnail_file = request.files.get('thumbnail')
         thumbnail_url = None
-        if thumbnail_file and allowed_file(thumbnail_file.filename):
+        if thumbnail_file and allowed_files(thumbnail_file.filename, ALLOWED_THUMBNAILS):
             filename = secure_filename(thumbnail_file.filename)
-            save_path = os.path.join(current_app.config['CV_THUMBNAIL_FOLDER'], filename)
+            save_path = os.path.join(current_app.root_path, THUMBNAIL_FOLDER, filename)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             thumbnail_file.save(save_path)
-            thumbnail_url = f"/static/uploads/cv_thumbnail/{filename}"
+            # Lưu đường dẫn web vào DB
+            thumbnail_url = f'/{THUMBNAIL_FOLDER}/{filename}'
 
+        # Xử lý file CV
         cv_file = request.files.get('file_path')
         cv_url = None
-        if cv_file and cv_file.filename != "":
+        if cv_file and allowed_files(cv_file.filename, ALLOWED_CV_FILES):
             filename = secure_filename(cv_file.filename)
-            save_path = os.path.join(current_app.config['CV_FILE_FOLDER'], filename)
+            save_path = os.path.join(current_app.root_path, CV_FILE_FOLDER, filename)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             cv_file.save(save_path)
-            cv_url = f"/static/uploads/cv_file/{filename}"
+            # Lưu đường dẫn web vào DB
+            cv_url = f'/{CV_FILE_FOLDER}/{filename}'
 
+        # Tạo object TemplateCV và lưu vào DB
         new_cv = TemplateCV(
-            name_cv = name_cv,
+            name_cv=name_cv,
             description=description,
             category=category,
             thumbnail=thumbnail_url,
             file_path=cv_url,
             is_active=is_active
         )
-
         db.session.add(new_cv)
         db.session.commit()
-
         flash('Thêm CV mẫu thành công!', 'success')
         return redirect(url_for('admin.template_cv_list'))
 
@@ -646,28 +660,51 @@ def add_template_cv():
 @admin_required
 def edit_template_cv(id):
     cv = TemplateCV.query.get_or_404(id)
+
     if request.method == 'POST':
-        cv.name = request.form['name']
-        cv.description = request.form.get('description')
-        cv.category = request.form.get('category')
-        cv.is_active = 1 if request.form.get('is_active') == 'on' else 0
+        old_name = cv.name_cv
+        old_description = cv.description
+        old_thumbnail = cv.thumbnail
 
-        thumbnail_file = request.files.get('thumbnail')
-        if thumbnail_file and allowed_file(thumbnail_file.filename):
-            filename = secure_filename(thumbnail_file.filename)
-            save_path = os.path.join(current_app.config['CV_THUMBNAIL_FOLDER'], filename)
-            thumbnail_file.save(save_path)
-            cv.thumbnail_url = f"/static/uploads/cv_thumbnail/{filename}"
+        name_cv = request.form.get('name')
+        description = request.form.get('description')
+        file = request.files.get('thumbnail_file')
 
-        cv_file = request.files.get('file_path')
-        if cv_file and cv_file.filename != "":
-            filename = secure_filename(cv_file.filename)
-            save_path = os.path.join(current_app.config['CV_FILE_FOLDER'], filename)
-            cv_file.save(save_path)
-            cv.file_path = f"/static/uploads/cv_file/{filename}"
+        if not name_cv or not description:
+            flash("Tên và mô tả không được để trống!", "danger")
+            return redirect(request.url)
 
-        db.session.commit()
-        flash('Cập nhật CV mẫu thành công!', 'success')
+        cv.name_cv = name_cv
+        cv.description = description
+
+        if file and file.filename:
+            if allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                save_path = os.path.join('static/uploads/avatar_cv', filename)
+
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                file.save(save_path)
+                cv.thumbnail = f"/static/uploads/avatar_cv/{filename}"
+            else:
+                flash("File không hợp lệ! Chỉ cho phép png, jpg, jpeg.", "danger")
+                return redirect(request.url)
+
+        if (
+            cv.name_cv == old_name and
+            cv.description == old_description and
+            cv.thumbnail == old_thumbnail
+        ):
+            flash("Không có thay đổi nào được thực hiện!", "warning")
+            return redirect(request.url)
+
+        try:
+            db.session.commit()
+            flash("Cập nhật CV mẫu thành công!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash("Lỗi! Không thể cập nhật dữ liệu.", "danger")
+            print("Lỗi DB:", e)
+
         return redirect(url_for('admin.template_cv_list'))
 
     return render_template('admin/template_cv/edit.html', cv=cv)

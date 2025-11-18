@@ -1,0 +1,44 @@
+{% extends "admin/layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">✏️ Sửa CV Mẫu</h1>
+    <p class="mb-4">Cập nhật thông tin mẫu CV hiện có.</p>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.edit_template_cv', id=cv.id) }}" enctype="multipart/form-data">
+                {{ csrf_token() if csrf_token is defined }}
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Tên CV</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ cv.name_cv }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Mô tả</label>
+                    <textarea class="form-control" id="description" name="description" rows="3">{{ cv.description }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="thumbnail_file" class="form-label">Hình đại diện</label>
+                    <input type="file" class="form-control" id="thumbnail_file" name="thumbnail_file" accept="image/*">
+                    {% if cv.thumbnail %}
+                    <small class="text-muted">Hình hiện tại:</small>
+                    <div class="mt-2 mb-2">
+                        <img src="{{ cv.thumbnail_url }}" alt="{{ cv.name }}" class="img-fluid" style="max-height:150px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save"></i> Lưu thay đổi
+                </button>
+                <a href="{{ url_for('admin.template_cv_list') }}" class="btn btn-secondary">
+                    Hủy
+                </a>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
