@@ -79,6 +79,15 @@
                     </ul>
                 </nav>
                 <!-- End of Topbar -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mt-2">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
                 <!-- Main Content -->
                 <div class="container-fluid">
