@@ -215,7 +215,6 @@ def job_list():
 @admin_bp.route('/jobs/create', methods=['GET', 'POST'])
 @admin_required
 def job_add():
-    # Chuẩn bị danh sách người dùng cho dropdown (cần cho cả GET và POST)
     users_list = User.query.filter(User.role.in_(['admin', 'recruiter'])).all()
 
     if request.method == 'POST':
@@ -295,11 +294,10 @@ def job_edit(id):
             job.job_type = request.form.get('job_type', '')
             job.vacancy = int(request.form.get('vacancy', 1))
 
-            # Xử lý Deadline
             deadline_str = request.form.get('deadline')
             job.deadline = datetime.strptime(deadline_str, '%Y-%m-%d').date() if deadline_str else None
             
-            # Xử lý Thời hạn đăng tin
+
             if job.details:
                 new_duration = int(request.form.get('duration_days', job.details.duration_days))
                 if new_duration != job.details.duration_days:
@@ -317,7 +315,6 @@ def job_edit(id):
              flash(f'Lỗi khi cập nhật tin tuyển dụng: {e}', 'danger')
              db.session.rollback()
 
-    # Truy vấn lại Job sau khi commit hoặc trong GET request
     return render_template('admin/jobs/edit.html', job=job)
 
 @admin_bp.route('/jobs/delete/<int:id>', methods=['POST'])
