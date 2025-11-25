@@ -9,6 +9,12 @@ from flask import current_app
 from datetime import datetime, date, timedelta
 from functools import wraps
 from sqlalchemy import func, or_
+from sqlalchemy.orm import relationship
+from sqlalchemy import text  
+
+
+
+
 
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -77,6 +83,7 @@ def user_add():
         return redirect(url_for('admin.user_list'))
 
     return render_template('admin/users/create.html')
+
 
 @admin_bp.route('/users/edit/<int:id>', methods=['GET', 'POST'])
 @admin_required
@@ -277,6 +284,8 @@ def job_add():
             db.session.rollback()
             
     return render_template('admin/jobs/create.html', users=users_list)
+
+
 @admin_bp.route('/jobs/edit/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def job_edit(id):
@@ -537,6 +546,7 @@ def job_analytics():
 
     return render_template('admin/jobs_post/job_analytics.html', data=analytics_data)
 
+
 @admin_bp.route('/jobs/edit-approval/<int:id>', methods=['GET', 'POST'])
 @admin_required
 def job_edit_approval(id):
@@ -600,7 +610,6 @@ CV_FILE_FOLDER = 'static/uploads/cv_file'
 ALLOWED_THUMBNAILS = {'png', 'jpg', 'jpeg', 'gif'}
 ALLOWED_CV_FILES = {'pdf', 'doc', 'docx'}
 
-# Hàm kiểm tra file hợp lệ
 def allowed_files(filename, allowed_exts):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_exts
 
@@ -609,13 +618,11 @@ def allowed_files(filename, allowed_exts):
 @admin_required
 def add_template_cv():
     if request.method == 'POST':
-        # Lấy dữ liệu từ form
         name_cv = request.form.get('name')
         description = request.form.get('description')
         category = request.form.get('category')
         is_active = 1 if request.form.get('is_active') == 'on' else 0
 
-        # Xử lý thumbnail
         thumbnail_file = request.files.get('thumbnail')
         thumbnail_url = None
         if thumbnail_file and allowed_files(thumbnail_file.filename, ALLOWED_THUMBNAILS):
@@ -623,10 +630,8 @@ def add_template_cv():
             save_path = os.path.join(current_app.root_path, THUMBNAIL_FOLDER, filename)
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             thumbnail_file.save(save_path)
-            # Lưu đường dẫn web vào DB
             thumbnail_url = f'/{THUMBNAIL_FOLDER}/{filename}'
 
-        # Xử lý file CV
         cv_file = request.files.get('file_path')
         cv_url = None
         if cv_file and allowed_files(cv_file.filename, ALLOWED_CV_FILES):
@@ -634,10 +639,8 @@ def add_template_cv():
             save_path = os.path.join(current_app.root_path, CV_FILE_FOLDER, filename)
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             cv_file.save(save_path)
-            # Lưu đường dẫn web vào DB
             cv_url = f'/{CV_FILE_FOLDER}/{filename}'
 
-        # Tạo object TemplateCV và lưu vào DB
         new_cv = TemplateCV(
             name_cv=name_cv,
             description=description,
@@ -714,3 +717,118 @@ def delete_template_cv(id):
     db.session.commit()
     flash('Xoá CV mẫu thành công!', 'success')
     return redirect(url_for('admin.template_cv_list'))
+
+
+
+
+
+
+class Permission(db.Model):
+    __tablename__ = 'permissions'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+
+    object_permissions = relationship('ObjectPermission', back_populates='permission')
+
+
+class ObjectPermission(db.Model):
+    __tablename__ = 'object_permissions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    object_type = db.Column(db.String(50), nullable=False)
+    object_id = db.Column(db.Integer, nullable=False)
+    permission_id = db.Column(db.Integer, db.ForeignKey('permissions.id'), nullable=False)
+
+    user = relationship('User', backref='object_permissions')
+    permission = relationship('Permission', back_populates='object_permissions')
+
+
+
+
+def has_permission(user, object_type, object_id, perm_name):
+    """
+    Kiểm tra xem user có quyền trên object cụ thể hay không
+    """
+    return db.session.query(ObjectPermission)\
+        .join(Permission, ObjectPermission.permission_id == Permission.id)\
+        .filter(
+            ObjectPermission.user_id == user.id,
+            ObjectPermission.object_type == object_type,
+            ObjectPermission.object_id == object_id,
+            Permission.name == perm_name
+        ).first() is not None
+
+
+def object_permission_required(object_type, perm_name):
+    """
+    Decorator kiểm tra quyền cho route
+    """
+    def decorator(f):
+        @wraps(f)
+        def wrapper(object_id, *args, **kwargs):
+            if not has_permission(current_user, object_type, object_id, perm_name):
+                flash("Bạn không có quyền thực hiện hành động này trên đối tượng.", "danger")
+                return redirect(url_for('admin.admin_dashboard'))
+            return f(object_id, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+
+
+@admin_bp.route('/users/<int:user_id>/permissions', methods=['GET', 'POST'])
+@admin_required
+def manage_user_permissions(user_id):
+    user = User.query.get_or_404(user_id)
+    permissions = Permission.query.all()
+
+    users_objects = User.query.all()
+    jobs_objects = db.session.execute(text('SELECT id FROM jobs')).fetchall()
+    cv_objects = db.session.execute(text('SELECT id FROM template_cv')).fetchall()
+    if request.method == 'POST':
+        ObjectPermission.query.filter_by(user_id=user.id).delete()
+
+        for obj_type, objects in [('User', users_objects), ('Job', jobs_objects), ('TemplateCV', cv_objects)]:
+            for obj in objects:
+                obj_id = obj.id if hasattr(obj, 'id') else obj[0]
+                for perm in permissions:
+                    field_name = f"{obj_type}_{obj_id}_{perm.id}"
+                    if request.form.get(field_name):
+                        op = ObjectPermission(
+                            user_id=user.id,
+                            object_type=obj_type,
+                            object_id=obj_id,
+                            permission_id=perm.id
+                        )
+                        db.session.add(op)
+        db.session.commit()
+        flash("Cập nhật quyền thành công!", "success")
+        return redirect(url_for('admin.user_list'))
+
+    current_perms = {(op.object_type, op.object_id, op.permission_id) for op in user.object_permissions}
+
+    return render_template(
+        'admin/roles/manage_permissions.html',
+        user=user,
+        permissions=permissions,
+        users_objects=users_objects,
+        jobs_objects=jobs_objects,
+        cv_objects=cv_objects,
+        current_perms=current_perms
+    )
+
+@admin_bp.route('/users/<int:user_id>/change-role', methods=['POST'])
+@admin_required
+def change_role(user_id):
+    user = User.query.get_or_404(user_id)
+    new_role = request.form.get('role')
+    if new_role in ['user', 'admin', 'recruiter']:
+        user.role = new_role
+
+        db.session.commit()
+        flash('Cập nhật vai trò thành công!', 'success')
+    else:
+        flash('Vai trò không hợp lệ!', 'danger')
+    return redirect(url_for('admin.user_list'))
+

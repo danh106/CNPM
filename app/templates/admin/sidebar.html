@@ -125,6 +125,39 @@
         </div>
     </li>
 
+    <div class="sidebar-heading">
+    Quản lý User
+</div>
+
+{% set roles_active = request.path.startswith('/admin/users') %}
+<li class="nav-item {% if roles_active %}active{% endif %}">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRoles"
+        aria-expanded="{{ 'true' if roles_active else 'false' }}" aria-controls="collapseRoles">
+        <i class="fas fa-users"></i>
+        <span>Users</span>
+    </a>
+    <div id="collapseRoles" class="collapse {% if roles_active %}show{% endif %}" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item {% if request.path == url_for('admin.user_list') %}active{% endif %}" 
+               href="{{ url_for('admin.user_list') }}">
+               <i class="fas fa-list"></i> Danh sách
+            </a>
+
+            <a class="collapse-item {% if request.path.startswith('/admin/users/') and request.path.endswith('/change-role') %}active{% endif %}" 
+               href="{{ url_for('admin.change_role', user_id=1) }}"> 
+               <i class="fas fa-user-edit"></i> Thay đổi Role
+            </a>
+
+            <a class="collapse-item {% if request.path.startswith('/admin/users/') and request.path.endswith('/permissions') %}active{% endif %}" 
+               href="{{ url_for('admin.manage_user_permissions', user_id=1) }}"> 
+               <i class="fas fa-shield-alt"></i> Phân quyền
+            </a>
+        </div>
+    </div>
+</li>
+
+
+
 
     <hr class="sidebar-divider d-none d-md-block">
 

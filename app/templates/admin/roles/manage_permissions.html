@@ -1,0 +1,104 @@
+{% extends "admin/layout.html" %}
+{% block title %}Phân quyền cho {{ user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h3 class="mb-3">Phân quyền cho: <strong>{{ user.full_name }}</strong></h3>
+    <p>Email: {{ user.email }}</p>
+    <hr>
+
+    <form method="POST">
+
+        <!-- USERS -->
+        <h4 class="mt-4">Quyền trên Người dùng</h4>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Người dùng</th>
+                        <th>Xem</th>
+                        <th>Sửa</th>
+                        <th>Xóa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in users_objects %}
+                    <tr>
+                        <td class="text-start">{{ obj.full_name }}</td>
+                        {% for perm_name in ['view','edit','delete'] %}
+                        <td>
+                            <input type="checkbox"
+                                   name="User_{{ obj.id }}_{{ perm_name }}"
+                                   {% if ('User', obj.id, perm_name) in current_perms %}checked{% endif %}>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- JOBS -->
+        <h4 class="mt-4">Quyền trên Công việc</h4>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Công việc</th>
+                        <th>Xem</th>
+                        <th>Sửa</th>
+                        <th>Xóa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in jobs_objects %}
+                    <tr>
+                        <td class="text-start">Job #{{ obj.id }}</td>
+                        {% for perm_name in ['view','edit','delete'] %}
+                        <td>
+                            <input type="checkbox"
+                                   name="Job_{{ obj.id }}_{{ perm_name }}"
+                                   {% if ('Job', obj.id, perm_name) in current_perms %}checked{% endif %}>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h4 class="mt-4">Quyền trên CV Mẫu</h4>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tên CV</th>
+                        <th>Xem</th>
+                        <th>Sửa</th>
+                        <th>Xóa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in cv_objects %}
+                    <tr>
+                        <td class="text-start">{{ obj.name_cv }}</td>
+                        {% for perm_name in ['view','edit','delete'] %}
+                        <td>
+                            <input type="checkbox"
+                                   name="TemplateCV_{{ obj.id }}_{{ perm_name }}"
+                                   {% if ('TemplateCV', obj.id, perm_name) in current_perms %}checked{% endif %}>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary px-4">Lưu quyền</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
